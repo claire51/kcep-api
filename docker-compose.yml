@@ -1,0 +1,54 @@
+version: "3.7"
+
+services:
+  traefik:
+    image: traefik:latest
+    container_name: coop.proxy
+    restart: always
+    ports:
+      - "3000:80"
+      - "8888:8080" # The Web UI (enabled by --api)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # So that Traefik can listen to the Docker events
+      - ./traefik:/etc/traefik # So that Traefik can listen to the Docker events
+    networks:
+      - coop
+
+  coop.cp.api:
+    build:
+      context: ../api
+    container_name: coop.cp.api
+    volumes:
+      - api_nm:/app/node_modules
+      - ../api:/app
+    restart: on-failure
+    networks:
+      - coop
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.coop-api.rule=Host(`localhost`)"
+      - "traefik.http.middlewares.coop-auth.forwardauth.address=http://localhost/auth/check"
+      - "traefik.http.middlewares.coop-auth.forwardauth.trustForwardHeader=true"
+      - "traefik.http.middlewares.coop-auth.forwardauth.authResponseHeaders=X-Auth-User"
+      - "traefik.http.services.coop-api.loadbalancer.server.port=3000"
+      - "traefik.http.routers.coop-api.entrypoints=web"
+    environment:
+      KCEP_ORACLE_HOST: 172.16.207.190
+      KCEP_ORACLE_PORT: 1521
+      KCEP_ORACLE_USER: KUSER
+      KCEP_ORACLE_PASSWORD: nxZwFhKuyxn_nxyuKhFwZ
+      KCEP_ORACLE_SID: KCEP
+      KCEP_DB: KUSER
+      QUEUE_PASS: guest
+      LDAP_SERVER_URL: ldap://svdrad01:co-opbank:co:ke:389
+      LDAP_DOMAIN: CO-OPBANK.CO.KE
+      PORTAL_URL: http://172.16.211.21:81
+      JWT_SECRET: A437CF74BED95A3B3B6A477D5F814
+
+volumes:
+  api_nm:
+  qdata:
+    external: true
+networks:
+  coop:
+    external: true

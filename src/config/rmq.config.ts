@@ -1,5 +1,4 @@
 import { Transport, ClientOptions } from '@nestjs/microservices';
-
 export const RedisConnectionOptions: ClientOptions = {
   transport: Transport.REDIS,
   options: {

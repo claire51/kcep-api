@@ -2,7 +2,6 @@ import {
     Injectable,
     BadRequestException,
     Logger,
-    OnModuleInit,
 } from '@nestjs/common';
 import {InjectRepository} from '@nestjs/typeorm';
 import {Brackets, Repository} from 'typeorm';

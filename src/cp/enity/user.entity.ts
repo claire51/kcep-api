@@ -7,6 +7,7 @@ import * as jwt from 'jsonwebtoken';
 
 import { BaseEntity } from '../../shared/base.entity';
 import {expiry} from "../../config/report";
+import {configCredentials} from "../../config/services_constants";
 
 @Entity('AGRODEALER_LOGIN_DETAILS', {
   orderBy: {
@@ -42,7 +43,7 @@ export class User extends BaseEntity {
         UserID,
         Password,
       },
-      process.env.JWT_SECRET,
+        configCredentials.JWT_SECRET,
       { expiresIn: expiry.duration },
     );
 

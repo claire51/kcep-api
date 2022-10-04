@@ -16,8 +16,6 @@ const user_module_1 = require("./cp/user/user.module");
 const database_module_1 = require("./config/database.module");
 const common_portal_module_1 = require("./cp/common-portal.module");
 const app_service_1 = require("./app.service");
-const pubsub_module_1 = require("./shared/pubsub/pubsub.module");
-const amqp_module_1 = require("./shared/amqp/amqp.module");
 const platform_express_1 = require("@nestjs/platform-express");
 let AppModule = class AppModule {
 };
@@ -25,8 +23,6 @@ AppModule = __decorate([
     common_1.Module({
         imports: [
             database_module_1.DatabaseConfigModule.register(),
-            amqp_module_1.CoopAMQPModule,
-            pubsub_module_1.PubsubModule,
             user_module_1.UserModule,
             common_portal_module_1.CommonPortalModule,
             platform_express_1.MulterModule.register({

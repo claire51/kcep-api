@@ -1,15 +1,11 @@
 import {Controller, Inject, Logger} from '@nestjs/common';
-import {PubSub} from "./shared/amqp/amqp.service";
 
 const Request = require('request');
 const parser = require('xml2json');
 
 @Controller()
 export class AppService {
-    constructor(
-        private readonly pubsub: PubSub,
-    ) {
-    }
+    constructor() {}
 
     async ping() {
         return "pong";

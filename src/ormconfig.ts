@@ -1,12 +1,12 @@
 import {TypeOrmModuleOptions} from '@nestjs/typeorm';
 const defaultOptions: TypeOrmModuleOptions = {
     type: 'oracle',
-    host: process.env.KCEP_ORACLE_HOST,
-    port: process.env.KCEP_ORACLE_PORT as any,
-    username: process.env.KCEP_ORACLE_USER,
-    password: process.env.KCEP_ORACLE_PASSWORD,
-    database: process.env.KCEP_DB,
-    sid: process.env.KCEP_ORACLE_SID,
+    host: '172.16.207.190',
+    port: 1521,
+    username: 'KUSER',
+    password: 'nxZwFhKuyxn_nxyuKhFwZ',
+    database: 'KUSER',
+    sid: 'KCEP',
     synchronize: false,
     dropSchema: false,
     logging: process.env.NODE_ENV === 'development' ? true : false,
@@ -18,8 +18,8 @@ const defaultOptions: TypeOrmModuleOptions = {
 export const Options: TypeOrmModuleOptions[] = [
     {
         ...defaultOptions,
-        database: process.env.KCEP_DB,
-        sid: process.env.KCEP_ORACLE_SID,
+        database: 'KUSER',
+        sid: 'KCEP',
         synchronize: false,
         dropSchema: false,
         migrationsRun: false,

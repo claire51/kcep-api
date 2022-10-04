@@ -1,7 +1,5 @@
-import { PubSub } from "./shared/amqp/amqp.service";
 export declare class AppService {
-    private readonly pubsub;
-    constructor(pubsub: PubSub);
+    constructor();
     ping(): Promise<string>;
     uuid(): string;
 }

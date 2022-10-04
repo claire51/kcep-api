@@ -20,5 +20,6 @@ export const configCredentials = {
     apiPassword: "password",
     username: "omni",
     password: "OmniPr0d",
+    JWT_SECRET: "A437CF74BED95A3B3B6A477D5F814",
     // password: "omni123",
 };

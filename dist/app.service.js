@@ -20,13 +20,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppService = void 0;
 const common_1 = require("@nestjs/common");
-const amqp_service_1 = require("./shared/amqp/amqp.service");
 const Request = require('request');
 const parser = require('xml2json');
 let AppService = class AppService {
-    constructor(pubsub) {
-        this.pubsub = pubsub;
-    }
+    constructor() { }
     ping() {
         return __awaiter(this, void 0, void 0, function* () {
             return "pong";
@@ -41,7 +38,7 @@ let AppService = class AppService {
 };
 AppService = __decorate([
     common_1.Controller(),
-    __metadata("design:paramtypes", [amqp_service_1.PubSub])
+    __metadata("design:paramtypes", [])
 ], AppService);
 exports.AppService = AppService;
 //# sourceMappingURL=app.service.js.map

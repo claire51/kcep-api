@@ -9,14 +9,10 @@ import { UserModule } from './cp/user/user.module';
 import { DatabaseConfigModule } from './config/database.module';
 import { CommonPortalModule } from './cp/common-portal.module';
 import { AppService } from './app.service';
-import { PubsubModule } from './shared/pubsub/pubsub.module';
-import { CoopAMQPModule } from './shared/amqp/amqp.module';
 import { MulterModule } from '@nestjs/platform-express';
 @Module({
   imports: [
     DatabaseConfigModule.register(),
-    CoopAMQPModule,
-    PubsubModule,
     UserModule,
     CommonPortalModule,
     MulterModule.register({
