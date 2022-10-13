@@ -91,7 +91,7 @@ export class LoginUserDTO {
     @IsDefined({
         message: 'Password is required',
     })
-    @IsOptional()
+    @IsString()
     password: string;
     @IsOptional()
     readonly ip: string;
@@ -113,6 +113,13 @@ export class otpDTO {
     })
     @IsString()
     username: string;
+}
+export class farmerOtpDTO {
+    @IsDefined({
+        message: 'National ID is required',
+    })
+    @IsString()
+    nationalId: string;
 }
 
 export class validateotpDTO {

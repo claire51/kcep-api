@@ -10,14 +10,17 @@ import { DatabaseConfigModule } from './config/database.module';
 import { CommonPortalModule } from './cp/common-portal.module';
 import { AppService } from './app.service';
 import { MulterModule } from '@nestjs/platform-express';
+import { FarmersModule } from './farmers/farmers.module';
 @Module({
   imports: [
     DatabaseConfigModule.register(),
+    DatabaseConfigModule.register({ name: 'KCEPPORTAL' }),
     UserModule,
     CommonPortalModule,
     MulterModule.register({
       dest: '/uploads',
     }),
+    FarmersModule,
   ],
   controllers: [AppController],
   providers: [

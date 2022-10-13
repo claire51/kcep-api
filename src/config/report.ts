@@ -9,6 +9,7 @@ export const reportopt = {
             jasper: "/app/report/eloan_writeAction.jasper",
             conn: "in_memory_json",
         },
+
         User_Based: {
             jasper: "/app/report/user_detail.jasper",
             conn: "in_memory_json",

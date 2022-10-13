@@ -5,8 +5,9 @@ import { UserService } from '../user/user.service';
 import { User } from '../enity/user.entity';
 import { AuthService } from './auth.service';
 import {Otp} from "../enity/otp.entity";
+import {AgrodealerAccountsEntity} from "../enity/agrodealer-accounts.entity";
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Otp])],
+  imports: [TypeOrmModule.forFeature([User, Otp, AgrodealerAccountsEntity])],
   providers: [UserService, AuthService],
   controllers: [AuthController],
   exports: [ AuthService],

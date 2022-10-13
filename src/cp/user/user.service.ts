@@ -17,11 +17,11 @@ import {ILike} from 'src/shared/case';
 import {Otp} from "../enity/otp.entity";
 import {configCredentials} from "../../config/services_constants";
 import {format} from 'date-fns';
+import {AgrodealerAccountsEntity} from "../enity/agrodealer-accounts.entity";
 
 const XLSX = require('xlsx');
 const Request = require('request');
 const bcrypt = require('bcryptjs');
-
 
 @Injectable()
 export class UserService {
@@ -31,17 +31,21 @@ export class UserService {
         private readonly userRepository: Repository<User>,
         @InjectRepository(Otp)
         private readonly otpRepository: Repository<Otp>,
+        @InjectRepository(AgrodealerAccountsEntity)
+        private readonly agrodealerAccountsRepository: Repository<AgrodealerAccountsEntity>,
     ) {
     }
 
-    async login({username, password}: LoginUserDTO, ip): Promise<User> {
+    async login({username, password}: LoginUserDTO): Promise<User> {
+
+        const user = await this.userRepository.findOne({
+            where: {username},
+        });
         try {
-            const user = await this.userRepository.findOne({
-                where: {username},
-            });
             if (!user) {
                 throw new BadRequestException('Agrodealer does not exist');
             }
+
             if (bcrypt.compareSync(password, user.Password)) {
                 await this.userRepository.update({UserID: user.UserID}, {
                     UpdatedAt: new Date(), FirstPassword: 1,
@@ -61,14 +65,13 @@ export class UserService {
 
     async validateUser({username}: validateUserDTO, ip): Promise<any> {
 
+        const user: User = await this.userRepository.findOne({
+            where: {username},
+        });
+        if (!user) {
+            throw new BadRequestException('Agrodealer does not exist');
+        }
         try {
-            const user: User = await this.userRepository.findOne({
-                where: {username},
-            });
-            if (!user) {
-                throw new BadRequestException('Agrodealer does not exist');
-            }
-
             if (!user.FirstPassword && user.FirstPassword !== 1) {
                 await this.userRepository.update({UserID: user.UserID}, {
                     FirstPassword: 0,
@@ -85,13 +88,13 @@ export class UserService {
     }
 
     async sendOtp({username}: otpDTO): Promise<any> {
+        const user: User = await this.userRepository.findOne({
+            where: {username},
+        });
+        if (!user) {
+            throw new BadRequestException('Agrodealer does not exist');
+        }
         try {
-            const user: User = await this.userRepository.findOne({
-                where: {username},
-            });
-            if (!user) {
-                throw new BadRequestException('Agrodealer does not exist');
-            }
             const otp = await this.generateOtp(4);
             const otpExpirydate = new Date();
             const currentTime = new Date();
@@ -129,8 +132,6 @@ export class UserService {
             if (otpData.OtpUtilized === 1) {
                 return {valid: false, message: 'OTP code has already been utilized'};
             }
-
-
             const currentTime = new Date();
             currentTime.setHours(currentTime.getHours() + 3);
             if (otpData.OtpExpiredTime > currentTime) {
@@ -151,19 +152,19 @@ export class UserService {
     }
 
     async setPassword({username, password, confirmPassword}: passwordDTO): Promise<any> {
+
+        if (confirmPassword !== password) {
+            throw new BadRequestException('Comfirm password  does not match provided password');
+        }
+
+        const user = await this.userRepository.findOne({
+            where: {username},
+        });
+
+        if (!user) {
+            throw new BadRequestException('Agrodealer does not exist');
+        }
         try {
-            if (confirmPassword !== password) {
-                throw new BadRequestException('Comfirm password  does not match provided password');
-            }
-
-            const user = await this.userRepository.findOne({
-                where: {username},
-            });
-
-            if (!user) {
-                throw new BadRequestException('Agrodealer does not exist');
-            }
-
             const otpData: Otp = await this.otpRepository.findOne({
                 where: {TerminalID: username, OtpUtilized: 1},
             });
@@ -188,6 +189,23 @@ export class UserService {
         return await this.userRepository.findOne({
             where: {username},
         });
+    }
+
+    async findByMerchantCode(merchantCode: string): Promise<AgrodealerAccountsEntity> {
+        try {
+            const agrodealer = await this.agrodealerAccountsRepository.findOne({
+                where: {merchantCode},
+            });
+
+            if (!agrodealer) {
+                throw new BadRequestException('Agrodealer with provided merchant code does not exist');
+            }
+
+            return agrodealer;
+        } catch (e) {
+            throw new BadRequestException(e);
+
+        }
     }
 
     async getByID(UserID: string): Promise<User> {

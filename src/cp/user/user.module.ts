@@ -8,10 +8,11 @@ import { IsUserUnique } from './user.rules';
 import { AuthModule } from 'src/cp/auth/auth.module';
 import { AuthMiddleware } from 'src/middleware/auth.middleware';
 import {Otp} from "../enity/otp.entity";
+import {AgrodealerAccountsEntity} from "../enity/agrodealer-accounts.entity";
 
 @Global()
 @Module({
-  imports: [TypeOrmModule.forFeature([ User, Otp]), AuthModule],
+  imports: [TypeOrmModule.forFeature([ User, Otp, AgrodealerAccountsEntity]), AuthModule],
   controllers: [UserController],
   providers: [UserService, IsUserUnique],
   exports: [UserService],

@@ -36,9 +36,7 @@ export class AuthController {
     @Post('login')
     @HttpCode(200)
     async login(@Req() req: Request, @Body() payload: LoginUserDTO) {
-        const ip = payload.ip ? payload.ip : req.headers['x-forwarded-for'];
-        Logger.log('IP_Address', payload.ip);
-        return this.userService.login(payload, ip);
+        return this.userService.login(payload);
     }
 
     @Post('validate_agrodealer')
