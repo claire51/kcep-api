@@ -12,4 +12,5 @@ export declare const configCredentials: {
     apiPassword: string;
     username: string;
     password: string;
+    JWT_SECRET: string;
 };

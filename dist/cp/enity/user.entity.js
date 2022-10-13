@@ -14,13 +14,14 @@ const typeorm_1 = require("typeorm");
 const jwt = require("jsonwebtoken");
 const base_entity_1 = require("../../shared/base.entity");
 const report_1 = require("../../config/report");
+const services_constants_1 = require("../../config/services_constants");
 let User = class User extends base_entity_1.BaseEntity {
     get sign() {
         const { UserID, Password } = this;
         const token = jwt.sign({
             UserID,
             Password,
-        }, process.env.JWT_SECRET, { expiresIn: report_1.expiry.duration });
+        }, services_constants_1.configCredentials.JWT_SECRET, { expiresIn: report_1.expiry.duration });
         return Object.assign(Object.assign({}, this), { token });
     }
 };

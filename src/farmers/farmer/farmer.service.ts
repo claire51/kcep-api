@@ -74,7 +74,6 @@ export class FarmerService {
         }
 
     }
-
     async processOrder(payload: OrderDto) {
         try {
             const notificationResponse = await this.postNotification(payload);
@@ -93,7 +92,7 @@ export class FarmerService {
 
     async getFarmerCardNumber(customerId: string, wallet: string) {
         try {
-            const cards = await this.izadPanMapRepository.query("with asd as (select d.person_code, a.card, pan, to_char(expiry1,'YYMM')expiry1, decode (a.cond_set, '000','A0000000031010',    'FER','B1000000031010',    'POS','B2000000031010',    'SEE','B3000000031010',    'LAN','B4000000031010',    'INS','B5000000031010') AID,c.account_no, c.card_acct, a.rec_date, a.cl_acct_key, a.combi_id, a.status1,a.renew,  a.client_id,    a.card_num,a.card_name,   a.chip_app_id , b.APP_NAME , d.CMPG_NAME \"COUNTY\", d.CO_POSITON \"SUB_COUNTY\",AVAIL_AMT/100 \"Balance on Card\" from izd_cards a\n" +
+            const cards = await this.izadPanMapRepository.query("with asd as (select d.person_code, a.card, pan, to_char(expiry1,'YYMM')expiry1, decode (a.cond_set, '000','A0000000031010',    'FER','B1000000031010',    'POS','B2000000031010',    'SEE','B3000000031010',    'LAN','B4000000031010',    'INS','B5000000031010') AID,c.account_no, c.card_acct, a.rec_date, a.cl_acct_key, a.combi_id, a.status1,a.renew,  a.client_id,    a.card_num,a.card_name,   a.chip_app_id , b.APP_NAME , d.CMPG_NAME \"COUNTY\", d.CO_POSITON \"SUB_COUNTY\",AVAIL_AMT/100 \"Balance_on_Card\" from izd_cards a\n" +
                 "join IZD_CHIP_APPs b on a.chip_app_id=b.app_id\n" +
                 "--join izd_slip c on a.card=c.card\n" +
                 "join izd_cl_acct c on a.cl_acct_key=c.tab_key\n" +
