@@ -33,3 +33,6 @@ spec:
               cpu: 100m
               memory: 300Mi
           imagePullPolicy: Always
+          envFrom:
+            - secretRef:
+                name: kcepcreds
