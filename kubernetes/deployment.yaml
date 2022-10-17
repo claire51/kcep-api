@@ -27,7 +27,7 @@ spec:
         - name: regcred
       containers:
         - name: kcep-api-container
-          image: gidimuts/kcep_api:sit
+          image: DOCKERIMAGE
           resources:
             requests:
               cpu: 100m
