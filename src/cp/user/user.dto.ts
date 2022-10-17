@@ -7,6 +7,7 @@ import {
     ArrayNotEmpty,
     IsEmail, IsNumberString, IsOptional,
 } from 'class-validator';
+import {ItemDto} from "../../farmers/entity/productDto";
 
 export class UserDTO {
 
@@ -120,6 +121,10 @@ export class farmerOtpDTO {
     })
     @IsString()
     nationalId: string;
+    @IsDefined({
+        message: 'Products are required',
+    })
+    products: ItemDto[];
 }
 
 export class validateotpDTO {

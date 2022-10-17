@@ -4,11 +4,12 @@ import {In, Repository} from "typeorm";
 import {ProgramWalletsEntity} from "../entity/program-wallets.entity";
 import {IzadPanMapEntity} from "../entity/izad-pan-map.entity";
 import {CustomersEntity} from "../entity/customers.entity";
-import {OrderDto, ProductDto} from "../entity/productDto";
+import {ItemDto, OrderDto, ProductDto} from "../entity/productDto";
 import {configCredentials} from "../../config/services_constants";
 import {format} from "date-fns";
 import {farmerOtpDTO} from "../../cp/user/user.dto";
 import {Otp} from "../../cp/enity/otp.entity";
+import {User} from "../../cp/enity/user.entity";
 
 const Request = require('request');
 const parser = require('xml2json');
@@ -74,15 +75,42 @@ export class FarmerService {
         }
 
     }
-    async processOrder(payload: OrderDto) {
+
+    async processOrder(payload: OrderDto, user: User) {
         try {
+
+            const farmer: CustomersEntity = await this.customersRepository.findOne({
+                where: {idNumber: payload.nationalId},
+            });
+            if (!farmer) {
+                throw new BadRequestException('Farmer does not exist');
+            }
             const notificationResponse = await this.postNotification(payload);
             const status = notificationResponse['SOAP-ENV:Envelope']['SOAP-ENV:Header']['ns:HeaderReply']['ns:StatusMessages']['ns:StatusMessage'];
             const statusData = await this.generateStatus(status);
             if (statusData.code !== '0000') {
                 throw new BadRequestException(statusData.description);
             }
-            return {processed: true, message: statusData.description, messageCode: statusData.code};
+            const currentpdate = new Date();
+            const otpDate = format(currentpdate, "dd/MM/yyyy");
+            const otpTime = format(currentpdate, "hh:mm a");
+            const rtpsRef = this.uuid(6);
+            const Message = configCredentials.sucessSMS.replace('<account_name>', farmer.firstName)
+                .replace('<total>', this.formatMoney(payload.transactionalAmount))
+                .replace('<dealer_account_name>', user.username)
+                .replace('<Date>', otpDate + ' ' + otpTime)
+                .replace('<rtps_ref>', rtpsRef.substr(0, 8));
+            await this.sendSMSSoap({
+                message: Message,
+                phone: farmer.phoneNumber,
+            });
+
+            return {
+                processed: true,
+                message: statusData.description,
+                messageCode: statusData.code,
+                rtps_ref: rtpsRef.substr(0, 8)
+            };
         } catch (e) {
             throw new BadRequestException(e);
 
@@ -185,7 +213,7 @@ export class FarmerService {
             const xml = "<soapenv:Envelope xmlns:com=\"urn://co-opbank.co.ke/Banking/Common/DataModel/CommonWallet/postNotification/1.0/CommonWallet.postNotification\" xmlns:dat=\"urn://co-opbank.co.ke/Banking/Common/Service/CommonWallet/PostNotification/1.0/DataIO\" xmlns:soap=\"urn://co-opbank.co.ke/SharedResources/Schemas/SOAMessages/SoapHeader\" xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
                 "<soapenv:Header>\n" +
                 "<soap:HeaderRequest>\n" +
-                `<soap:MessageID>${this.uuid()}</soap:MessageID>\n` +
+                `<soap:MessageID>${this.uuid(16)}</soap:MessageID>\n` +
                 "<soap:Credentials>\n" +
                 "<soap:SystemCode>013</soap:SystemCode>\n" +
                 "</soap:Credentials>\n" +
@@ -230,10 +258,10 @@ export class FarmerService {
         });
     }
 
-    uuid() {
+    uuid(n) {
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
             const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
+            return v.toString(n);
         });
     }
 
@@ -270,7 +298,7 @@ export class FarmerService {
         return dataArray;
     }
 
-    async sendOtp({nationalId}: farmerOtpDTO): Promise<any> {
+    async sendOtp({nationalId, products}: farmerOtpDTO): Promise<any> {
         const user: CustomersEntity = await this.customersRepository.findOne({
             where: {idNumber: nationalId},
         });
@@ -278,23 +306,32 @@ export class FarmerService {
             throw new BadRequestException('Farmer does not exist');
         }
         try {
-            const otp = await this.generateOtp(4);
+            const otp: string = await this.generateOtp(4);
             const otpExpirydate = new Date();
             const currentTime = new Date();
             currentTime.setHours(currentTime.getHours() + 3);
             otpExpirydate.setHours(otpExpirydate.getHours() + 3);
             otpExpirydate.setMinutes(otpExpirydate.getMinutes() + 5);
 
+            const otpDate = format(currentTime, "dd/MM/yyyy");
+            const otpTime = format(currentTime, "hh:mm a");
+
             const u = {
-                Otp: otp,
+                Otp: +otp,
                 OtpExpired: 0,
                 OtpExpiredTime: otpExpirydate,
                 OtpUtilized: 0,
                 AutoGenerationTime: currentTime,
                 TerminalID: nationalId,
             };
+            let Message = configCredentials.otpSMS.replace('<account_name>', user.firstName)
+                .replace(' <otp_code>', otp)
+                .replace('<Date>', otpDate + ' ' + otpTime);
+            const productDetails = await this.getProductSMS(products);
+            Message += productDetails;
+
             await this.sendSMSSoap({
-                message: `Your OTP verification code is ${otp}, the code expires in 5 minutes`,
+                message: Message,
                 phone: user.phoneNumber,
             });
             await this.otpRepository.save(u);
@@ -305,14 +342,25 @@ export class FarmerService {
     }
 
     async generateOtp(n) {
-        return Math.floor(Math.random() * (9 * Math.pow(10, n - 1))) + Math.pow(10, n - 1);
+        return Math.floor(Math.random() * (9 * Math.pow(10, n - 1))) + Math.pow(10, n - 1).toString();
+    }
+
+    async getProductSMS(items: ItemDto[]) {
+        let totalAmount: number = 0;
+        let productmessage: string = "";
+        for (const item of items) {
+            totalAmount += item.transactionPrice;
+            productmessage += `${item.serviceCode} quantity ${item.transactionQuantity} ksh ${item.transactionPrice} \n`;
+        }
+        productmessage += `Total: ksh ${this.formatMoney(totalAmount)}`;
+        return productmessage;
     }
 
     async sendSMSSoap(data: any) {
         const auth = 'Basic ' + new Buffer(configCredentials.username + ":" + configCredentials.password).toString("base64");
 
         const currenttime = format(new Date(), "yyyy-MM-dd'T'HH:mm:ss");
-        const uuid = this.uuid();
+        const uuid = this.uuid(16);
         const smsurl = configCredentials.sms_url;
         const xml = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:mes=\"urn://co-opbank.co.ke/CommonServices/Data/Message/MessageHeader\" xmlns:com=\"urn://co-opbank.co.ke/CommonServices/Data/Common\" xmlns:ns=\"urn://co-opbank.co.ke/Banking/Common/SMS/1.0\">\n" +
             "   <soapenv:Header>\n" +
@@ -361,5 +409,14 @@ export class FarmerService {
                 Logger.log(`SMS  Sent to ${data.phone} `, '>>>>>>>>');
             }
         });
+    }
+
+    formatMoney(value) {
+        if (value == 0 || value == 0.0 || value == 0.00) {
+            return '0.00';
+        } else {
+            const formamoney = value ? value.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') : 0.00;
+            return formamoney;
+        }
     }
 }

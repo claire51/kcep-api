@@ -42,10 +42,11 @@ export class FarmerController {
     async getProducts(@UserAuth() user: User, @Req() req: Request, @Body() payload: ProductDto) {
         return this.farmerService.getFarmerProducts(payload);
     }
+
     @Post('post_order')
     @HttpCode(200)
     async orderProduct(@UserAuth() user: User, @Req() req: Request, @Body() payload: OrderDto) {
-        return this.farmerService.processOrder(payload);
+        return this.farmerService.processOrder(payload, user);
     }
 
     @Post('send_otp')

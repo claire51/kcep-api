@@ -29,6 +29,10 @@ export class OrderDto {
     })
     readonly walletReferenceCode: string;
     @IsDefined({
+        message: 'National ID is required',
+    })
+    readonly nationalId: string;
+    @IsDefined({
         message: 'Wallet Reference Code  is required',
     })
     readonly transactionalAmount: string;
