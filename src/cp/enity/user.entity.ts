@@ -43,7 +43,7 @@ export class User extends BaseEntity {
         UserID,
         Password,
       },
-        configCredentials.JWT_SECRET,
+        process.env.JWT_SECRET,
       { expiresIn: expiry.duration },
     );
 

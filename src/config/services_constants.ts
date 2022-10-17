@@ -11,6 +11,5 @@ export const configCredentials = {
     password: "OmniPr0d",
     kcep_username: "mwallet",
     kcep_password: "mwallet123",
-    JWT_SECRET: "A437CF74BED95A3B3B6A477D5F814",
     // password: "omni123",
 };

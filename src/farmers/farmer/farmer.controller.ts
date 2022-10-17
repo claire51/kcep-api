@@ -2,7 +2,7 @@ import {
     Body,
     ClassSerializerInterceptor,
     Controller,
-    Get, HttpCode,
+    Get, HttpCode, Logger,
     Post,
     Query, Req,
     UseInterceptors,
@@ -28,7 +28,7 @@ export class FarmerController {
     }
 
     @Get('validate')
-    async validateFarmer(@UserAuth() user: User,  @Query() filters: any) {
+    async validateFarmer(@UserAuth() user: User, @Query() filters: any) {
         return await this.farmerService.validateFarmer(filters.customerId);
     }
 
@@ -36,12 +36,12 @@ export class FarmerController {
     async getFarmerCardNumber(@UserAuth() user: User, @Query() filters: any) {
         return await this.farmerService.getFarmerCardNumber(filters.customerId, filters.walletReferenceCode);
     }
+
     @Post('products')
     @HttpCode(200)
     async getProducts(@UserAuth() user: User, @Req() req: Request, @Body() payload: ProductDto) {
         return this.farmerService.getFarmerProducts(payload);
     }
-
     @Post('post_order')
     @HttpCode(200)
     async orderProduct(@UserAuth() user: User, @Req() req: Request, @Body() payload: OrderDto) {
