@@ -4,7 +4,7 @@ import {
     Logger,
 } from '@nestjs/common';
 import {InjectRepository} from '@nestjs/typeorm';
-import {Brackets, Repository} from 'typeorm';
+import { Repository} from 'typeorm';
 import {
     Pagination,
     IPaginationOptions,
@@ -19,7 +19,6 @@ import {configCredentials} from "../../config/services_constants";
 import {format} from 'date-fns';
 import {AgrodealerAccountsEntity} from "../enity/agrodealer-accounts.entity";
 
-const XLSX = require('xlsx');
 const Request = require('request');
 const bcrypt = require('bcryptjs');
 
