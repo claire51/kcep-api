@@ -23,5 +23,5 @@ export class Otp {
   @Column({ name: 'OTP_EXPIRED_TIME' })
   OtpExpiredTime: Date;
   @Column({ name: 'OTP' })
-  Otp: number;
+  Otp: string;
 }

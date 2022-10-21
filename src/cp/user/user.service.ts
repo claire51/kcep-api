@@ -4,7 +4,7 @@ import {
     Logger,
 } from '@nestjs/common';
 import {InjectRepository} from '@nestjs/typeorm';
-import { Repository} from 'typeorm';
+import {Repository} from 'typeorm';
 import {
     Pagination,
     IPaginationOptions,
@@ -94,7 +94,7 @@ export class UserService {
             throw new BadRequestException('Agrodealer does not exist');
         }
         try {
-            const otp = await this.generateOtp(4);
+            const otp = '' + await this.generateOtp(4);
             const otpExpirydate = new Date();
             const currentTime = new Date();
             currentTime.setHours(currentTime.getHours() + 3);
@@ -207,12 +207,6 @@ export class UserService {
         }
     }
 
-    async getByID(UserID: string): Promise<User> {
-        return await this.userRepository.findOne({
-            where: {UserID},
-        });
-    }
-
     async getUser(UserID: string) {
         const user = await this.userRepository.findOne({
             where: {UserID},
@@ -256,7 +250,7 @@ export class UserService {
     }
 
     async generateOtp(n) {
-        return Math.floor(Math.random() * (9 * Math.pow(10, n - 1))) + Math.pow(10, n - 1);
+        return '' + Math.floor(Math.random() * (9 * Math.pow(10, n - 1))) + Math.pow(10, n - 1);
     }
 
     async sendSMSSoap(data: any) {

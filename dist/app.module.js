@@ -17,17 +17,20 @@ const database_module_1 = require("./config/database.module");
 const common_portal_module_1 = require("./cp/common-portal.module");
 const app_service_1 = require("./app.service");
 const platform_express_1 = require("@nestjs/platform-express");
+const farmers_module_1 = require("./farmers/farmers.module");
 let AppModule = class AppModule {
 };
 AppModule = __decorate([
     common_1.Module({
         imports: [
             database_module_1.DatabaseConfigModule.register(),
+            database_module_1.DatabaseConfigModule.register({ name: 'KCEPPORTAL' }),
             user_module_1.UserModule,
             common_portal_module_1.CommonPortalModule,
             platform_express_1.MulterModule.register({
                 dest: '/uploads',
             }),
+            farmers_module_1.FarmersModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [

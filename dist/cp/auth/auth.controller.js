@@ -42,9 +42,7 @@ let AuthController = class AuthController {
     }
     login(req, payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const ip = payload.ip ? payload.ip : req.headers['x-forwarded-for'];
-            common_1.Logger.log('IP_Address', payload.ip);
-            return this.userService.login(payload, ip);
+            return this.userService.login(payload);
         });
     }
     validateUser(req, payload) {

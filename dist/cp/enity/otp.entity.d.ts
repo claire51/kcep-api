@@ -6,5 +6,5 @@ export declare class Otp {
     OtpUtilizedTime: Date;
     OtpExpired: number;
     OtpExpiredTime: Date;
-    Otp: number;
+    Otp: string;
 }

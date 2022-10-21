@@ -24,12 +24,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserController = void 0;
 const common_1 = require("@nestjs/common");
 const user_service_1 = require("./user.service");
+const user_entity_1 = require("../enity/user.entity");
 const auth_decorator_1 = require("../../guards/auth.decorator");
+const user_decorator_1 = require("./user.decorator");
 let UserController = class UserController {
     constructor(userService) {
         this.userService = userService;
     }
-    getAllUsers(filters) {
+    getAllUsers(user, filters) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.userService.index(filters);
         });
@@ -39,33 +41,48 @@ let UserController = class UserController {
             return this.userService.findByUsername(username);
         });
     }
-    deleteUser(id) {
+    findAgrodealerAccount(user, filters) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.userService.findByMerchantCode(filters.merchantCode);
+        });
+    }
+    deleteUser(user, id) {
         return this.userService.destroy(id);
     }
 };
 __decorate([
     common_1.Get(),
-    __param(0, common_1.Query()),
+    common_1.UsePipes(common_1.ValidationPipe),
+    __param(0, user_decorator_1.UserAuth()), __param(1, common_1.Query()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [user_entity_1.User, Object]),
     __metadata("design:returntype", Promise)
 ], UserController.prototype, "getAllUsers", null);
 __decorate([
-    common_1.Get(':username'),
+    common_1.Get('byUsername/:username'),
     __param(0, common_1.Param('username')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], UserController.prototype, "findUserByUsername", null);
 __decorate([
-    common_1.Delete(':id'),
-    __param(0, common_1.Param('id')),
+    common_1.Get('account'),
+    common_1.UsePipes(common_1.ValidationPipe),
+    __param(0, user_decorator_1.UserAuth()), __param(1, common_1.Query()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [user_entity_1.User, Object]),
+    __metadata("design:returntype", Promise)
+], UserController.prototype, "findAgrodealerAccount", null);
+__decorate([
+    common_1.Delete(':id'),
+    common_1.UsePipes(common_1.ValidationPipe),
+    __param(0, user_decorator_1.UserAuth()), __param(1, common_1.Param('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [user_entity_1.User, String]),
     __metadata("design:returntype", void 0)
 ], UserController.prototype, "deleteUser", null);
 UserController = __decorate([
-    common_1.Controller('users'),
+    common_1.Controller('agrodealer'),
     auth_decorator_1.Auth(),
     common_1.UseInterceptors(common_1.ClassSerializerInterceptor),
     __metadata("design:paramtypes", [user_service_1.UserService])

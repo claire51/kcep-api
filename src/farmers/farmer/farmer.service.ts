@@ -306,7 +306,7 @@ export class FarmerService {
             throw new BadRequestException('Farmer does not exist');
         }
         try {
-            const otp: string = await this.generateOtp(4);
+            const otp = '' + await this.generateOtp(4);
             const otpExpirydate = new Date();
             const currentTime = new Date();
             currentTime.setHours(currentTime.getHours() + 3);
@@ -317,7 +317,7 @@ export class FarmerService {
             const otpTime = format(currentTime, "hh:mm a");
 
             const u = {
-                Otp: +otp,
+                Otp: otp,
                 OtpExpired: 0,
                 OtpExpiredTime: otpExpirydate,
                 OtpUtilized: 0,
@@ -340,11 +340,9 @@ export class FarmerService {
             throw new BadRequestException('Exception ' + e);
         }
     }
-
     async generateOtp(n) {
-        return Math.floor(Math.random() * (9 * Math.pow(10, n - 1))) + Math.pow(10, n - 1).toString();
+        return Math.floor(Math.random() * (9 * Math.pow(10, n - 1))) + Math.pow(10, n - 1);
     }
-
     async getProductSMS(items: ItemDto[]) {
         let totalAmount: number = 0;
         let productmessage: string = "";

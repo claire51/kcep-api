@@ -1,3 +1,4 @@
+import { ItemDto } from "../../farmers/entity/productDto";
 export declare class UserDTO {
     readonly Username: string;
     readonly Mobile: string;
@@ -29,6 +30,10 @@ export declare class validateUserDTO {
 }
 export declare class otpDTO {
     username: string;
+}
+export declare class farmerOtpDTO {
+    nationalId: string;
+    products: ItemDto[];
 }
 export declare class validateotpDTO {
     username: string;

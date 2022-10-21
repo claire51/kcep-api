@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.passwordDTO = exports.validateotpDTO = exports.otpDTO = exports.validateUserDTO = exports.LoginUserDTO = exports.UserApprovalDTO = exports.UserDTO = void 0;
+exports.passwordDTO = exports.validateotpDTO = exports.farmerOtpDTO = exports.otpDTO = exports.validateUserDTO = exports.LoginUserDTO = exports.UserApprovalDTO = exports.UserDTO = void 0;
 const class_validator_1 = require("class-validator");
 class UserDTO {
 }
@@ -117,7 +117,7 @@ __decorate([
     class_validator_1.IsDefined({
         message: 'Password is required',
     }),
-    class_validator_1.IsOptional(),
+    class_validator_1.IsString(),
     __metadata("design:type", String)
 ], LoginUserDTO.prototype, "password", void 0);
 __decorate([
@@ -149,6 +149,22 @@ __decorate([
     __metadata("design:type", String)
 ], otpDTO.prototype, "username", void 0);
 exports.otpDTO = otpDTO;
+class farmerOtpDTO {
+}
+__decorate([
+    class_validator_1.IsDefined({
+        message: 'National ID is required',
+    }),
+    class_validator_1.IsString(),
+    __metadata("design:type", String)
+], farmerOtpDTO.prototype, "nationalId", void 0);
+__decorate([
+    class_validator_1.IsDefined({
+        message: 'Products are required',
+    }),
+    __metadata("design:type", Array)
+], farmerOtpDTO.prototype, "products", void 0);
+exports.farmerOtpDTO = farmerOtpDTO;
 class validateotpDTO {
 }
 __decorate([

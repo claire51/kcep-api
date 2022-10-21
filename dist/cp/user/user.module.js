@@ -16,6 +16,7 @@ const user_rules_1 = require("./user.rules");
 const auth_module_1 = require("../auth/auth.module");
 const auth_middleware_1 = require("../../middleware/auth.middleware");
 const otp_entity_1 = require("../enity/otp.entity");
+const agrodealer_accounts_entity_1 = require("../enity/agrodealer-accounts.entity");
 let UserModule = class UserModule {
     configure(consumer) {
         consumer.apply(auth_middleware_1.AuthMiddleware).forRoutes(user_controller_1.UserController);
@@ -24,7 +25,7 @@ let UserModule = class UserModule {
 UserModule = __decorate([
     common_1.Global(),
     common_1.Module({
-        imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, otp_entity_1.Otp]), auth_module_1.AuthModule],
+        imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, otp_entity_1.Otp, agrodealer_accounts_entity_1.AgrodealerAccountsEntity]), auth_module_1.AuthModule],
         controllers: [user_controller_1.UserController],
         providers: [user_service_1.UserService, user_rules_1.IsUserUnique],
         exports: [user_service_1.UserService],

@@ -1,1 +1,1 @@
-export declare function Auth(...roles: string[]): (target: any, key?: string, descriptor?: any) => any;
+export declare function Auth(): <TFunction extends Function, Y>(target: Object | TFunction, propertyKey?: string | symbol, descriptor?: TypedPropertyDescriptor<Y>) => void;

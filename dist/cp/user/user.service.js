@@ -31,20 +31,21 @@ const case_1 = require("../../shared/case");
 const otp_entity_1 = require("../enity/otp.entity");
 const services_constants_1 = require("../../config/services_constants");
 const date_fns_1 = require("date-fns");
-const XLSX = require('xlsx');
+const agrodealer_accounts_entity_1 = require("../enity/agrodealer-accounts.entity");
 const Request = require('request');
 const bcrypt = require('bcryptjs');
 let UserService = class UserService {
-    constructor(userRepository, otpRepository) {
+    constructor(userRepository, otpRepository, agrodealerAccountsRepository) {
         this.userRepository = userRepository;
         this.otpRepository = otpRepository;
+        this.agrodealerAccountsRepository = agrodealerAccountsRepository;
     }
-    login({ username, password }, ip) {
+    login({ username, password }) {
         return __awaiter(this, void 0, void 0, function* () {
+            const user = yield this.userRepository.findOne({
+                where: { username },
+            });
             try {
-                const user = yield this.userRepository.findOne({
-                    where: { username },
-                });
                 if (!user) {
                     throw new common_1.BadRequestException('Agrodealer does not exist');
                 }
@@ -68,13 +69,13 @@ let UserService = class UserService {
     }
     validateUser({ username }, ip) {
         return __awaiter(this, void 0, void 0, function* () {
+            const user = yield this.userRepository.findOne({
+                where: { username },
+            });
+            if (!user) {
+                throw new common_1.BadRequestException('Agrodealer does not exist');
+            }
             try {
-                const user = yield this.userRepository.findOne({
-                    where: { username },
-                });
-                if (!user) {
-                    throw new common_1.BadRequestException('Agrodealer does not exist');
-                }
                 if (!user.FirstPassword && user.FirstPassword !== 1) {
                     yield this.userRepository.update({ UserID: user.UserID }, {
                         FirstPassword: 0,
@@ -94,14 +95,14 @@ let UserService = class UserService {
     }
     sendOtp({ username }) {
         return __awaiter(this, void 0, void 0, function* () {
+            const user = yield this.userRepository.findOne({
+                where: { username },
+            });
+            if (!user) {
+                throw new common_1.BadRequestException('Agrodealer does not exist');
+            }
             try {
-                const user = yield this.userRepository.findOne({
-                    where: { username },
-                });
-                if (!user) {
-                    throw new common_1.BadRequestException('Agrodealer does not exist');
-                }
-                const otp = yield this.generateOtp(4);
+                const otp = '' + (yield this.generateOtp(4));
                 const otpExpirydate = new Date();
                 const currentTime = new Date();
                 currentTime.setHours(currentTime.getHours() + 3);
@@ -162,16 +163,16 @@ let UserService = class UserService {
     }
     setPassword({ username, password, confirmPassword }) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (confirmPassword !== password) {
+                throw new common_1.BadRequestException('Comfirm password  does not match provided password');
+            }
+            const user = yield this.userRepository.findOne({
+                where: { username },
+            });
+            if (!user) {
+                throw new common_1.BadRequestException('Agrodealer does not exist');
+            }
             try {
-                if (confirmPassword !== password) {
-                    throw new common_1.BadRequestException('Comfirm password  does not match provided password');
-                }
-                const user = yield this.userRepository.findOne({
-                    where: { username },
-                });
-                if (!user) {
-                    throw new common_1.BadRequestException('Agrodealer does not exist');
-                }
                 const otpData = yield this.otpRepository.findOne({
                     where: { TerminalID: username, OtpUtilized: 1 },
                 });
@@ -199,11 +200,20 @@ let UserService = class UserService {
             });
         });
     }
-    getByID(UserID) {
+    findByMerchantCode(merchantCode) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.userRepository.findOne({
-                where: { UserID },
-            });
+            try {
+                const agrodealer = yield this.agrodealerAccountsRepository.findOne({
+                    where: { merchantCode },
+                });
+                if (!agrodealer) {
+                    throw new common_1.BadRequestException('Agrodealer with provided merchant code does not exist');
+                }
+                return agrodealer;
+            }
+            catch (e) {
+                throw new common_1.BadRequestException(e);
+            }
         });
     }
     getUser(UserID) {
@@ -251,7 +261,7 @@ let UserService = class UserService {
     }
     generateOtp(n) {
         return __awaiter(this, void 0, void 0, function* () {
-            return Math.floor(Math.random() * (9 * Math.pow(10, n - 1))) + Math.pow(10, n - 1);
+            return '' + Math.floor(Math.random() * (9 * Math.pow(10, n - 1))) + Math.pow(10, n - 1);
         });
     }
     sendSMSSoap(data) {
@@ -321,7 +331,9 @@ UserService = __decorate([
     common_1.Injectable(),
     __param(0, typeorm_1.InjectRepository(user_entity_1.User)),
     __param(1, typeorm_1.InjectRepository(otp_entity_1.Otp)),
+    __param(2, typeorm_1.InjectRepository(agrodealer_accounts_entity_1.AgrodealerAccountsEntity)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository])
 ], UserService);
 exports.UserService = UserService;

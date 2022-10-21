@@ -33,6 +33,7 @@ function bootstrap() {
                 return new validation_exception_1.ValidationException(err);
             },
         }), new filters_pipe_1.FiltersPipe());
+        app.enableCors();
         app.use(express_1.json({ limit: '50mb' }));
         app.use(express_1.urlencoded({ limit: '50mb' }));
         app.useGlobalInterceptors(new logging_interceptor_1.LoggingInterceptor());

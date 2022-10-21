@@ -14,11 +14,12 @@ const user_service_1 = require("../user/user.service");
 const user_entity_1 = require("../enity/user.entity");
 const auth_service_1 = require("./auth.service");
 const otp_entity_1 = require("../enity/otp.entity");
+const agrodealer_accounts_entity_1 = require("../enity/agrodealer-accounts.entity");
 let AuthModule = class AuthModule {
 };
 AuthModule = __decorate([
     common_1.Module({
-        imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, otp_entity_1.Otp])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, otp_entity_1.Otp, agrodealer_accounts_entity_1.AgrodealerAccountsEntity])],
         providers: [user_service_1.UserService, auth_service_1.AuthService],
         controllers: [auth_controller_1.AuthController],
         exports: [auth_service_1.AuthService],

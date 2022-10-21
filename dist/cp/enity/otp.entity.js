@@ -43,7 +43,7 @@ __decorate([
 ], Otp.prototype, "OtpExpiredTime", void 0);
 __decorate([
     typeorm_1.Column({ name: 'OTP' }),
-    __metadata("design:type", Number)
+    __metadata("design:type", String)
 ], Otp.prototype, "Otp", void 0);
 Otp = __decorate([
     typeorm_1.Entity('OTP', {
