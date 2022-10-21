@@ -13,5 +13,4 @@ export const configCredentials = {
     password: "OmniPr0d",
     kcep_username: "mwallet",
     kcep_password: "mwallet123",
-    // password: "omni123",
 };
