@@ -5,7 +5,7 @@ import {
     MinLength,
     Validate,
     ArrayNotEmpty,
-    IsEmail, IsNumberString, IsOptional,
+    IsEmail, IsNumberString, IsOptional, IsNumber,
 } from 'class-validator';
 import {ItemDto} from "../../farmers/entity/productDto";
 
@@ -114,6 +114,19 @@ export class otpDTO {
     })
     @IsString()
     username: string;
+}
+
+export class phoneOtpDTO {
+    @IsDefined({
+        message: 'Mobile Number is required',
+    })
+    @IsString()
+    mobileNumber: string;
+    @IsDefined({
+        message: 'Request type is required (1 for username and 2 for password recovery)',
+    })
+    @IsNumber()
+    type: number;
 }
 export class farmerOtpDTO {
     @IsDefined({

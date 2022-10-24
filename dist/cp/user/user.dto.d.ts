@@ -31,6 +31,10 @@ export declare class validateUserDTO {
 export declare class otpDTO {
     username: string;
 }
+export declare class phoneOtpDTO {
+    mobileNumber: string;
+    type: number;
+}
 export declare class farmerOtpDTO {
     nationalId: string;
     products: ItemDto[];

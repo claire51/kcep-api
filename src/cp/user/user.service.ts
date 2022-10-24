@@ -12,7 +12,7 @@ import {
 } from 'nestjs-typeorm-paginate';
 
 import {User} from '../enity/user.entity';
-import {UserDTO, LoginUserDTO, validateUserDTO, otpDTO, passwordDTO, validateotpDTO} from './user.dto';
+import {UserDTO, LoginUserDTO, validateUserDTO, otpDTO, passwordDTO, validateotpDTO, phoneOtpDTO} from './user.dto';
 import {ILike} from 'src/shared/case';
 import {Otp} from "../enity/otp.entity";
 import {configCredentials} from "../../config/services_constants";
@@ -114,6 +114,51 @@ export class UserService {
                 phone: user.PhoneNumber,
             });
             await this.otpRepository.save(u);
+        } catch (e) {
+            Logger.log('Agrodealer OTP Generation Error' + e.getMessage, 'OTP');
+            throw new BadRequestException('Exception ' + e);
+        }
+    }
+
+    async sendOtpByPhoneNumber({mobileNumber, type}: phoneOtpDTO): Promise<any> {
+        const user: User = await this.userRepository
+            .createQueryBuilder("user")
+            .where("user.PhoneNumber like :phone", {phone: `%${mobileNumber.substr(mobileNumber.length - 9)}%`})
+            .getOne();
+
+
+        if (!user) {
+            throw new BadRequestException('Agrodealer with provided mobile number does not exist');
+        }
+        try {
+            if (type === 1) {
+                await this.sendSMSSoap({
+                    message: `Dear Agro-Dealer, Your Username is ${user.username}.`,
+                    phone: user.PhoneNumber,
+                });
+            } else {
+                const otp = '' + await this.generateOtp(4);
+                const otpExpirydate = new Date();
+                const currentTime = new Date();
+                currentTime.setHours(currentTime.getHours() + 3);
+                otpExpirydate.setHours(otpExpirydate.getHours() + 3);
+                otpExpirydate.setMinutes(otpExpirydate.getMinutes() + 5);
+
+                const u = {
+                    Otp: otp,
+                    OtpExpired: 0,
+                    OtpExpiredTime: otpExpirydate,
+                    OtpUtilized: 0,
+                    AutoGenerationTime: currentTime,
+                    TerminalID: mobileNumber,
+                };
+                await this.sendSMSSoap({
+                    message: `Your OTP verification code is ${otp}, the code expires in 5 minutes`,
+                    phone: user.PhoneNumber,
+                });
+                await this.otpRepository.save(u);
+            }
+
         } catch (e) {
             Logger.log('Agrodealer OTP Generation Error' + e.getMessage, 'OTP');
             throw new BadRequestException('Exception ' + e);

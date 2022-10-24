@@ -62,6 +62,11 @@ let AuthController = class AuthController {
             return this.userService.sendOtp(payload);
         });
     }
+    SendOtpByPhone(req, payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.userService.sendOtpByPhoneNumber(payload);
+        });
+    }
     ValidateOtp(req, payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.userService.validateOtp(payload);
@@ -115,6 +120,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, user_dto_1.otpDTO]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "SendOtp", null);
+__decorate([
+    common_1.Post('recover_account'),
+    common_1.HttpCode(200),
+    __param(0, common_1.Req()), __param(1, common_1.Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, user_dto_1.phoneOtpDTO]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "SendOtpByPhone", null);
 __decorate([
     common_1.Post('validate_otp'),
     common_1.HttpCode(200),

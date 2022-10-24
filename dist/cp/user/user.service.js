@@ -128,6 +128,50 @@ let UserService = class UserService {
             }
         });
     }
+    sendOtpByPhoneNumber({ mobileNumber, type }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const user = yield this.userRepository
+                .createQueryBuilder("user")
+                .where("user.PhoneNumber like :phone", { phone: `%${mobileNumber.substr(mobileNumber.length - 9)}%` })
+                .getOne();
+            if (!user) {
+                throw new common_1.BadRequestException('Agrodealer with provided mobile number does not exist');
+            }
+            try {
+                if (type === 1) {
+                    yield this.sendSMSSoap({
+                        message: `Dear Agro-Dealer, Your Username is ${user.username}.`,
+                        phone: user.PhoneNumber,
+                    });
+                }
+                else {
+                    const otp = '' + (yield this.generateOtp(4));
+                    const otpExpirydate = new Date();
+                    const currentTime = new Date();
+                    currentTime.setHours(currentTime.getHours() + 3);
+                    otpExpirydate.setHours(otpExpirydate.getHours() + 3);
+                    otpExpirydate.setMinutes(otpExpirydate.getMinutes() + 5);
+                    const u = {
+                        Otp: otp,
+                        OtpExpired: 0,
+                        OtpExpiredTime: otpExpirydate,
+                        OtpUtilized: 0,
+                        AutoGenerationTime: currentTime,
+                        TerminalID: mobileNumber,
+                    };
+                    yield this.sendSMSSoap({
+                        message: `Your OTP verification code is ${otp}, the code expires in 5 minutes`,
+                        phone: user.PhoneNumber,
+                    });
+                    yield this.otpRepository.save(u);
+                }
+            }
+            catch (e) {
+                common_1.Logger.log('Agrodealer OTP Generation Error' + e.getMessage, 'OTP');
+                throw new common_1.BadRequestException('Exception ' + e);
+            }
+        });
+    }
     validateOtp({ username, otp }) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -261,7 +305,7 @@ let UserService = class UserService {
     }
     generateOtp(n) {
         return __awaiter(this, void 0, void 0, function* () {
-            return '' + Math.floor(Math.random() * (9 * Math.pow(10, n - 1))) + Math.pow(10, n - 1);
+            return Math.floor(Math.random() * (9 * Math.pow(10, n - 1))) + Math.pow(10, n - 1);
         });
     }
     sendSMSSoap(data) {

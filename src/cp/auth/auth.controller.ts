@@ -11,7 +11,7 @@ import {
     HttpCode, Logger, Req,
 } from '@nestjs/common';
 import {Request} from 'express';
-import {LoginUserDTO, otpDTO, passwordDTO, validateotpDTO, validateUserDTO} from '../user/user.dto';
+import {LoginUserDTO, otpDTO, passwordDTO, phoneOtpDTO, validateotpDTO, validateUserDTO} from '../user/user.dto';
 import {UserService} from '../user/user.service';
 import {UserAuth} from '../user/user.decorator';
 import {User} from '../enity/user.entity';
@@ -57,6 +57,12 @@ export class AuthController {
     @HttpCode(200)
     async SendOtp(@Req() req: Request, @Body() payload: otpDTO) {
         return this.userService.sendOtp(payload);
+    }
+
+    @Post('recover_account')
+    @HttpCode(200)
+    async SendOtpByPhone(@Req() req: Request, @Body() payload: phoneOtpDTO) {
+        return this.userService.sendOtpByPhoneNumber(payload);
     }
 
     @Post('validate_otp')
