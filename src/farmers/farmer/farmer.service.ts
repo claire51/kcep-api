@@ -55,7 +55,6 @@ export class FarmerService {
         }
 
     }
-
     async getFarmerProducts(payload: ProductDto) {
         try {
             const productsXml = await this.findProducts(payload);
@@ -75,7 +74,6 @@ export class FarmerService {
         }
 
     }
-
     async processOrder(payload: OrderDto, user: User) {
         try {
 
