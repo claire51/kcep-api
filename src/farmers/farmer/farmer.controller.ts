@@ -2,7 +2,7 @@ import {
     Body,
     ClassSerializerInterceptor,
     Controller,
-    Get, HttpCode, Logger,
+    Get, HttpCode,
     Post,
     Query, Req,
     UseInterceptors,
@@ -11,7 +11,7 @@ import {FarmerService} from "./farmer.service";
 import {UserAuth} from "../../cp/user/user.decorator";
 import {User} from "../../cp/enity/user.entity";
 import {Request} from "express";
-import {farmerOtpDTO} from "../../cp/user/user.dto";
+import {farmerOtpDTO } from "../../cp/user/user.dto";
 import {OrderDto, ProductDto} from "../entity/productDto";
 import {Auth} from "../../guards/auth.decorator";
 
@@ -48,10 +48,14 @@ export class FarmerController {
     async orderProduct(@UserAuth() user: User, @Req() req: Request, @Body() payload: OrderDto) {
         return this.farmerService.processOrder(payload, user);
     }
-
     @Post('send_otp')
     @HttpCode(200)
     async SendOtp(@UserAuth() user: User, @Req() req: Request, @Body() payload: farmerOtpDTO) {
         return this.farmerService.sendOtp(payload);
+    }
+    @Get('transactions')
+    @HttpCode(200)
+    async findTransaction(@UserAuth() user: User, @Query() filters) {
+        return this.farmerService.getTransactions(filters);
     }
 }

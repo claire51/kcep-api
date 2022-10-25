@@ -10,6 +10,10 @@ import {format} from "date-fns";
 import {farmerOtpDTO} from "../../cp/user/user.dto";
 import {Otp} from "../../cp/enity/otp.entity";
 import {User} from "../../cp/enity/user.entity";
+import {AgrodealerAccountsEntity} from "../../cp/enity/agrodealer-accounts.entity";
+import {TransactionEntity} from "../entity/transaction.entity";
+import {IPaginationOptions, paginate, Pagination} from "nestjs-typeorm-paginate";
+import {ILike} from "../../shared/case";
 
 const Request = require('request');
 const parser = require('xml2json');
@@ -24,16 +28,36 @@ export class FarmerService {
         @InjectRepository(ProgramWalletsEntity)
         private readonly programWalletsRepository: Repository<ProgramWalletsEntity>,
         @InjectRepository(IzadPanMapEntity, 'KCEPPORTAL')
-        private readonly izadPanMapRepository: Repository<IzadPanMapEntity>) {
+        private readonly izadPanMapRepository: Repository<IzadPanMapEntity>,
+        @InjectRepository(AgrodealerAccountsEntity)
+        private readonly agrodealerAccountsRepository: Repository<AgrodealerAccountsEntity>,
+        @InjectRepository(TransactionEntity)
+        private readonly transactionRepository: Repository<TransactionEntity>,
+    ) {
     }
 
     async getFarmerWallets() {
         const programWallets = await this.programWalletsRepository.find({
-            walletReferenceCode: In(['B1000000031010', 'B2000000031010', 'B3000000031010']), program: 'KCEP'
+            walletReferenceCode: In(['B1000000031010', 'B2000000031010', 'B3000000031010']), program: 'KCEP',
         });
         return programWallets;
     }
 
+    async getTransactions(options: any = {limit: 100, page: 1}) {
+        return await paginate(this.transactionRepository, options as IPaginationOptions, {
+            where: [
+                {
+                    transactionReference: ILike(`%${options.search}%`),
+                },
+                {
+                    accountNumber: ILike(`%${options.search}%`),
+                },
+                {
+                    merchantCode : options.merchantCode,
+                },
+            ],
+        });
+    }
     async validateFarmer(customerId) {
         try {
             const farmer = await this.customersRepository.findOne({
@@ -55,6 +79,7 @@ export class FarmerService {
         }
 
     }
+
     async getFarmerProducts(payload: ProductDto) {
         try {
             const productsXml = await this.findProducts(payload);
@@ -74,6 +99,7 @@ export class FarmerService {
         }
 
     }
+
     async processOrder(payload: OrderDto, user: User) {
         try {
 
@@ -83,32 +109,97 @@ export class FarmerService {
             if (!farmer) {
                 throw new BadRequestException('Farmer does not exist');
             }
-            const notificationResponse = await this.postNotification(payload);
-            const status = notificationResponse['SOAP-ENV:Envelope']['SOAP-ENV:Header']['ns:HeaderReply']['ns:StatusMessages']['ns:StatusMessage'];
-            const statusData = await this.generateStatus(status);
-            if (statusData.code !== '0000') {
-                throw new BadRequestException(statusData.description);
-            }
-            const currentpdate = new Date();
-            const otpDate = format(currentpdate, "dd/MM/yyyy");
-            const otpTime = format(currentpdate, "hh:mm a");
-            const rtpsRef = this.uuid(6);
-            const Message = configCredentials.sucessSMS.replace('<account_name>', farmer.firstName)
-                .replace('<total>', this.formatMoney(payload.transactionalAmount))
-                .replace('<dealer_account_name>', user.username)
-                .replace('<Date>', otpDate + ' ' + otpTime)
-                .replace('<rtps_ref>', rtpsRef.substr(0, 8));
-            await this.sendSMSSoap({
-                message: Message,
-                phone: farmer.phoneNumber,
+
+            // const farmerDetails = [
+            //     {
+            //         PERSON_CODE: "23431574",
+            //         CARD: "691040JXQXIW9858",
+            //         PAN: "6910400100689858",
+            //         EXPIRY1: "2307",
+            //         AID: "B1000000031010",
+            //         ACCOUNT_NO: 7195196,
+            //         CARD_ACCT: "0000049643",
+            //         REC_DATE: "2018-07-05T00:00:00.000Z",
+            //         CL_ACCT_KEY: 7192918,
+            //         COMBI_ID: 17499,
+            //         STATUS1: "0",
+            //         RENEW: "J",
+            //         CLIENT_ID: "05590579",
+            //         CARD_NUM: "69104001",
+            //         CARD_NAME: "JUSTUS MUTUNGA",
+            //         CHIP_APP_ID: 222,
+            //         APP_NAME: "FERTILIZER",
+            //         COUNTY: "MAKUENI",
+            //         SUB_COUNTY: "MBOONI",
+            //         Balance_on_Card: 300,
+            //     },
+            // ];
+            const farmerDetails = await this.getFarmerCardNumber(payload.nationalId, payload.walletReferenceCode);
+            const agrodealer: AgrodealerAccountsEntity = await this.agrodealerAccountsRepository.findOne({
+                where: {merchantCode: payload.merchantCode},
             });
 
-            return {
-                processed: true,
-                message: statusData.description,
-                messageCode: statusData.code,
-                rtps_ref: rtpsRef.substr(0, 8)
+            if (!agrodealer) {
+                throw new BadRequestException('Agrodealer with provided merchant code does not exist');
+            }
+
+            const farmData = farmerDetails[0];
+            const code = 'KC' + this.randomString(8);
+            const cardTransac = {
+                merchantCode: payload.merchantCode,
+                walletAccountNumber: farmData.PAN,
+                walletReferenceCode: payload.walletReferenceCode,
+                transactionalAmount: payload.transactionalAmount,
+                nationalId: payload.nationalId,
+                settlementAcc: agrodealer.dealerAccount,
+                terminalId: user.UserID,
+                terminalMerchantId: agrodealer.merchantCode,
+                expiry: farmData.EXPIRY1,
+                Narration: code + ' card payment from ' + farmData.PAN + ' to ' + user.UserID,
+                Balance: farmData.Balance_on_Card,
+                reference: code,
             };
+
+            const cardResponse = await this.processCardTransactions(cardTransac);
+            const cardStatus = cardResponse['soapenv:Envelope']['soapenv:Header']['tns63:ReplyHeader']['head:StatusMessages']['head:MessageCode'];
+            const cardStatusMessage = cardResponse['soapenv:Envelope']['soapenv:Header']['tns63:ReplyHeader']['head:StatusMessages']['head:MessageDescription'];
+
+            if (cardStatus === 0) {
+                const paymentID = cardResponse['soapenv:Envelope']['soapenv:Body']['tns63:DataOutput'].paymentID;
+                const notificationResponse = await this.postNotification(payload);
+                const status = notificationResponse['SOAP-ENV:Envelope']['SOAP-ENV:Header']['ns:HeaderReply']['ns:StatusMessages']['ns:StatusMessage'];
+                const statusData = await this.generateStatus(status);
+                if (statusData.code !== '0000') {
+                    throw new BadRequestException(statusData.description);
+                }
+                const currentpdate = new Date();
+                const otpDate = format(currentpdate, "dd/MM/yyyy");
+                const otpTime = format(currentpdate, "hh:mm a");
+                const Message = configCredentials.sucessSMS.replace('<account_name>', farmer.firstName)
+                    .replace('<total>', this.formatMoney(payload.transactionalAmount))
+                    .replace('<dealer_account_name>', user.username)
+                    .replace('<Date>', otpDate + ' ' + otpTime)
+                    .replace('<rtps_ref>', paymentID);
+                await this.sendSMSSoap({
+                    message: Message,
+                    phone: farmer.phoneNumber,
+                });
+
+                return {
+                    processed: true,
+                    message: statusData.description,
+                    messageCode: statusData.code,
+                    rtps_ref: paymentID,
+                };
+            } else {
+                return {
+                    processed: false,
+                    message: cardStatusMessage,
+                    messageCode: cardStatus,
+                    rtps_ref: 0,
+                };
+            }
+
         } catch (e) {
             throw new BadRequestException(e);
 
@@ -136,6 +227,111 @@ export class FarmerService {
         } catch (e) {
             throw new BadRequestException(e);
         }
+    }
+
+    async processCardTransactions(data: any) {
+        return new Promise<any>((resolve, reject) => {
+            const auth = 'Basic ' + new Buffer(configCredentials.username + ":" + configCredentials.password).toString("base64");
+            const date = new Date();
+            // date.setHours(date.getHours() + 3);
+            const currenttime = format(date, "yyyy-MM-dd'T'HH:mm:ss");
+
+            const url = configCredentials.cardTransactionUrl;
+            const xml = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:dat=\"urn://www.co-opbank.co.ke/CommonServices/TS/RTPS/SERVICES/CardTransaction/2.0/DataIO.1.0\" xmlns:com=\"urn://co-opbank.co.ke/CommonServices/Data/Common\" xmlns:mes=\"urn://co-opbank.co.ke/CommonServices/Data/Message/MessageHeader\">\n" +
+                "   <soapenv:Header>\n" +
+                "      <dat:RequestHeader>\n" +
+                `        <com:CreationTimestamp>${currenttime}</com:CreationTimestamp>\n` +
+                `         <com:CorrelationID>${this.uuid(16)}</com:CorrelationID>\n` +
+                `         <mes:MessageID>${this.uuid(16)}</mes:MessageID>\n` +
+                "         <mes:Credentials>\n" +
+                "            <mes:SystemCode>OMNIRIB</mes:SystemCode>\n" +
+                "         </mes:Credentials>\n" +
+                "      </dat:RequestHeader>\n" +
+                "   </soapenv:Header>\n" +
+                "   <soapenv:Body>\n" +
+                "      <dat:DataInput>\n" +
+                "         <OperationType>NORMAL</OperationType>\n" +
+                "         <language>en</language>\n" +
+                "         <switchingID/>\n" +
+                "         <billerRef>OMNIKCEP</billerRef>\n" +
+                "         <payinstrRef>KCEP</payinstrRef>\n" +
+                "         <details>\n" +
+                "            <item>\n" +
+                `               <name>amount</name>\n` +
+                `               <value>${data.transactionalAmount}</value>\n` +
+                "            </item>\n" +
+                "            <item>\n" +
+                "               <name>pan</name>\n" +
+                `               <value>${data.walletAccountNumber}</value>\n` +
+                "            </item>\n" +
+                "            <item>\n" +
+                "               <name>ACC2</name>\n" +
+                `               <value>${data.settlementAcc}</value>\n` +
+                "            </item>\n" +
+                "            <item>\n" +
+                "               <name>ccy_code</name>\n" +
+                "               <value>404</value>\n" +
+                "            </item>\n" +
+                "            <item>\n" +
+                "               <name>point_code</name>\n" +
+                `               <value>090010199100</value>\n` +
+                "            </item>\n" +
+                "            <item>\n" +
+                "               <name>ref_numb</name>\n" +
+                `               <value>${data.reference}</value>\n` +
+                "            </item>\n" +
+                "            <item>\n" +
+                "               <name>ROUT_ID2</name>\n" +
+                `               <value>40783</value>\n` +
+                "            </item>\n" +
+                "            <item>\n" +
+                "               <name>terminal_merchant_id</name>\n" +
+                `               <value>${data.merchantCode}</value>\n` +
+                "            </item>\n" +
+                "            <item>\n" +
+                "               <name>terminal_id</name>\n" +
+                `               <value>${data.terminalId}</value>\n` +
+                "            </item>\n" +
+                "            <item>\n" +
+                "               <name>NARR</name>\n" +
+                `               <value>${data.Narration}</value>\n` +
+                "            </item>\n" +
+                "            <item>\n" +
+                "               <name>expiry</name>\n" +
+                `               <value>${data.expiry}</value>\n` +
+                "            </item>\n" +
+                "         </details>\n" +
+                "         <confirmed>\n" +
+                "            <value>true</value>\n" +
+                "         </confirmed>\n" +
+                "         <finished>\n" +
+                "            <value>true</value>\n" +
+                "         </finished>\n" +
+                "      </dat:DataInput>\n" +
+                "   </soapenv:Body>\n" +
+                "</soapenv:Envelope>";
+
+            Request.post({
+                headers: {
+                    'Content-Type': 'text/xml',
+                    'Authorization': auth,
+                    'SOAPAction': '"post"',
+
+                },
+                url,
+                body: xml,
+            }, (error, response, body) => {
+                if (error) {
+                    const json = parser.toJson(body);
+                    reject(JSON.parse(json));
+                } else {
+                    const json = parser.toJson(body);
+                    Logger.log(JSON.parse(json));
+                    resolve(JSON.parse(json));
+                }
+
+            });
+        });
     }
 
     async findProducts(data: ProductDto) {
@@ -338,9 +534,11 @@ export class FarmerService {
             throw new BadRequestException('Exception ' + e);
         }
     }
+
     async generateOtp(n) {
         return Math.floor(Math.random() * (9 * Math.pow(10, n - 1))) + Math.pow(10, n - 1);
     }
+
     async getProductSMS(items: ItemDto[]) {
         let totalAmount: number = 0;
         let productmessage: string = "";
@@ -414,5 +612,20 @@ export class FarmerService {
             const formamoney = value ? value.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') : 0.00;
             return formamoney;
         }
+    }
+
+    randomString(len) {
+        const charSet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let randomString = 'AP';
+        for (let i = 0; i < len; i++) {
+            const randomPoz = Math.floor(Math.random() * charSet.length);
+            randomString += charSet.substring(randomPoz, randomPoz + 1);
+        }
+        return randomString;
+    }
+
+    isNumeric(num) {
+        num = "" + num;
+        return !isNaN(num) && !isNaN(parseFloat(num));
     }
 }

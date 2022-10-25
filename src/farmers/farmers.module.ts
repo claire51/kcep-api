@@ -7,10 +7,13 @@ import {AuthMiddleware} from "../middleware/auth.middleware";
 import {IzadPanMapEntity} from "./entity/izad-pan-map.entity";
 import {CustomersEntity} from "./entity/customers.entity";
 import {Otp} from "../cp/enity/otp.entity";
+import {AgrodealerAccountsEntity} from "../cp/enity/agrodealer-accounts.entity";
+import {TransactionEntity} from "./entity/transaction.entity";
+import {TransactionDetailsEntity} from "./entity/transaction_details.entity";
 
 @Global()
 @Module({
-  imports: [TypeOrmModule.forFeature([ Otp, ProgramWalletsEntity, CustomersEntity]),
+  imports: [TypeOrmModule.forFeature([ Otp, AgrodealerAccountsEntity, ProgramWalletsEntity, CustomersEntity, TransactionEntity, TransactionDetailsEntity]),
     TypeOrmModule.forFeature([  IzadPanMapEntity], 'KCEPPORTAL')],
   controllers: [FarmerController],
   providers: [FarmerService],
