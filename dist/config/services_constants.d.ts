@@ -6,6 +6,7 @@ export declare const configCredentials: {
     sms_url: string;
     product_url: string;
     postTransactionUrl: string;
+    cardTransactionUrl: string;
     otpSMS: string;
     sucessSMS: string;
     username: string;

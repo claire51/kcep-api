@@ -6,22 +6,29 @@ import { ItemDto, OrderDto, ProductDto } from "../entity/productDto";
 import { farmerOtpDTO } from "../../cp/user/user.dto";
 import { Otp } from "../../cp/enity/otp.entity";
 import { User } from "../../cp/enity/user.entity";
+import { AgrodealerAccountsEntity } from "../../cp/enity/agrodealer-accounts.entity";
+import { TransactionEntity } from "../entity/transaction.entity";
+import { Pagination } from "nestjs-typeorm-paginate";
 export declare class FarmerService {
     private readonly customersRepository;
     private readonly otpRepository;
     private readonly programWalletsRepository;
     private readonly izadPanMapRepository;
-    constructor(customersRepository: Repository<CustomersEntity>, otpRepository: Repository<Otp>, programWalletsRepository: Repository<ProgramWalletsEntity>, izadPanMapRepository: Repository<IzadPanMapEntity>);
+    private readonly agrodealerAccountsRepository;
+    private readonly transactionRepository;
+    constructor(customersRepository: Repository<CustomersEntity>, otpRepository: Repository<Otp>, programWalletsRepository: Repository<ProgramWalletsEntity>, izadPanMapRepository: Repository<IzadPanMapEntity>, agrodealerAccountsRepository: Repository<AgrodealerAccountsEntity>, transactionRepository: Repository<TransactionEntity>);
     getFarmerWallets(): Promise<ProgramWalletsEntity[]>;
+    getTransactions(options?: any): Promise<Pagination<TransactionEntity>>;
     validateFarmer(customerId: any): Promise<CustomersEntity>;
     getFarmerProducts(payload: ProductDto): Promise<any[]>;
     processOrder(payload: OrderDto, user: User): Promise<{
         processed: boolean;
         message: any;
         messageCode: any;
-        rtps_ref: string;
+        rtps_ref: any;
     }>;
     getFarmerCardNumber(customerId: string, wallet: string): Promise<any>;
+    processCardTransactions(data: any): Promise<any>;
     findProducts(data: ProductDto): Promise<any>;
     postNotification(data: OrderDto): Promise<any>;
     uuid(n: any): string;
@@ -37,4 +44,6 @@ export declare class FarmerService {
     getProductSMS(items: ItemDto[]): Promise<string>;
     sendSMSSoap(data: any): Promise<void>;
     formatMoney(value: any): any;
+    randomString(len: any): string;
+    isNumeric(num: any): boolean;
 }

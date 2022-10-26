@@ -299,7 +299,7 @@ export class UserService {
     }
 
     async sendSMSSoap(data: any) {
-        const auth = 'Basic ' + new Buffer(configCredentials.username + ":" + configCredentials.password).toString("base64");
+        const auth = 'Basic ' + new Buffer(configCredentials.username + ":" + configCredentials.password_prod).toString("base64");
 
         const currenttime = format(new Date(), "yyyy-MM-dd'T'HH:mm:ss");
         const uuid = this.uuid();

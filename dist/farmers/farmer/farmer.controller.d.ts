@@ -14,7 +14,8 @@ export declare class FarmerController {
         processed: boolean;
         message: any;
         messageCode: any;
-        rtps_ref: string;
+        rtps_ref: any;
     }>;
     SendOtp(user: User, req: Request, payload: farmerOtpDTO): Promise<any>;
+    findTransaction(user: User, filters: any): Promise<import("nestjs-typeorm-paginate").Pagination<import("../entity/transaction.entity").TransactionEntity>>;
 }

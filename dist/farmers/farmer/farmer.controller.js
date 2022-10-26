@@ -63,6 +63,11 @@ let FarmerController = class FarmerController {
             return this.farmerService.sendOtp(payload);
         });
     }
+    findTransaction(user, filters) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.farmerService.getTransactions(filters);
+        });
+    }
 };
 __decorate([
     common_1.Get('program_wallets'),
@@ -109,6 +114,14 @@ __decorate([
     __metadata("design:paramtypes", [user_entity_1.User, Object, user_dto_1.farmerOtpDTO]),
     __metadata("design:returntype", Promise)
 ], FarmerController.prototype, "SendOtp", null);
+__decorate([
+    common_1.Get('transactions'),
+    common_1.HttpCode(200),
+    __param(0, user_decorator_1.UserAuth()), __param(1, common_1.Query()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [user_entity_1.User, Object]),
+    __metadata("design:returntype", Promise)
+], FarmerController.prototype, "findTransaction", null);
 FarmerController = __decorate([
     common_1.Controller('farmer'),
     auth_decorator_1.Auth(),

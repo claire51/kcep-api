@@ -12,6 +12,7 @@ export const configCredentials = {
     sucessSMS: `Dear <account_name> your KCEP inputs purchase of Ksh <total> from  <dealer_account_name> on  <Date> has been processed. Reference No. <rtps_ref>`,
     username: "omni",
     password: "omni123",
+    password_prod: "OmniPr0d",
     kcep_username: "mwallet",
     kcep_password: "mwallet123",
 };
