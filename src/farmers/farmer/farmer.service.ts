@@ -53,11 +53,12 @@ export class FarmerService {
                     accountNumber: ILike(`%${options.search}%`),
                 },
                 {
-                    merchantCode : options.merchantCode,
+                    merchantCode: options.merchantCode,
                 },
             ],
         });
     }
+
     async validateFarmer(customerId) {
         try {
             const farmer = await this.customersRepository.findOne({
@@ -110,30 +111,6 @@ export class FarmerService {
                 throw new BadRequestException('Farmer does not exist');
             }
 
-            // const farmerDetails = [
-            //     {
-            //         PERSON_CODE: "23431574",
-            //         CARD: "691040JXQXIW9858",
-            //         PAN: "6910400100689858",
-            //         EXPIRY1: "2307",
-            //         AID: "B1000000031010",
-            //         ACCOUNT_NO: 7195196,
-            //         CARD_ACCT: "0000049643",
-            //         REC_DATE: "2018-07-05T00:00:00.000Z",
-            //         CL_ACCT_KEY: 7192918,
-            //         COMBI_ID: 17499,
-            //         STATUS1: "0",
-            //         RENEW: "J",
-            //         CLIENT_ID: "05590579",
-            //         CARD_NUM: "69104001",
-            //         CARD_NAME: "JUSTUS MUTUNGA",
-            //         CHIP_APP_ID: 222,
-            //         APP_NAME: "FERTILIZER",
-            //         COUNTY: "MAKUENI",
-            //         SUB_COUNTY: "MBOONI",
-            //         Balance_on_Card: 300,
-            //     },
-            // ];
             const farmerDetails = await this.getFarmerCardNumber(payload.nationalId, payload.walletReferenceCode);
             const agrodealer: AgrodealerAccountsEntity = await this.agrodealerAccountsRepository.findOne({
                 where: {merchantCode: payload.merchantCode},
@@ -160,45 +137,46 @@ export class FarmerService {
                 reference: code,
             };
 
-            const cardResponse = await this.processCardTransactions(cardTransac);
-            const cardStatus = cardResponse['soapenv:Envelope']['soapenv:Header']['tns63:ReplyHeader']['head:StatusMessages']['head:MessageCode'];
-            const cardStatusMessage = cardResponse['soapenv:Envelope']['soapenv:Header']['tns63:ReplyHeader']['head:StatusMessages']['head:MessageDescription'];
-
-            if (cardStatus === 0) {
-                const paymentID = cardResponse['soapenv:Envelope']['soapenv:Body']['tns63:DataOutput'].paymentID;
-                const notificationResponse = await this.postNotification(payload);
-                const status = notificationResponse['SOAP-ENV:Envelope']['SOAP-ENV:Header']['ns:HeaderReply']['ns:StatusMessages']['ns:StatusMessage'];
-                const statusData = await this.generateStatus(status);
-                if (statusData.code !== '0000') {
-                    throw new BadRequestException(statusData.description);
-                }
-                const currentpdate = new Date();
-                const otpDate = format(currentpdate, "dd/MM/yyyy");
-                const otpTime = format(currentpdate, "hh:mm a");
-                const Message = configCredentials.sucessSMS.replace('<account_name>', farmer.firstName)
-                    .replace('<total>', this.formatMoney(payload.transactionalAmount))
-                    .replace('<dealer_account_name>', user.username)
-                    .replace('<Date>', otpDate + ' ' + otpTime)
-                    .replace('<rtps_ref>', paymentID);
-                await this.sendSMSSoap({
-                    message: Message,
-                    phone: farmer.phoneNumber,
-                });
-
-                return {
-                    processed: true,
-                    message: statusData.description,
-                    messageCode: statusData.code,
-                    rtps_ref: paymentID,
-                };
-            } else {
-                return {
-                    processed: false,
-                    message: cardStatusMessage,
-                    messageCode: cardStatus,
-                    rtps_ref: 0,
-                };
+            // const cardResponse = await this.processCardTransactions(cardTransac);
+            // const cardStatus = cardResponse['soapenv:Envelope']['soapenv:Header']['tns63:ReplyHeader']['head:StatusMessages']['head:MessageCode'];
+            // const cardStatusMessage = cardResponse['soapenv:Envelope']['soapenv:Header']['tns63:ReplyHeader']['head:StatusMessages']['head:MessageDescription'];
+            //
+            // if (cardStatus === 0) {
+            const otp = '' + await this.generateOtp(10);
+            const paymentID = otp;
+            const notificationResponse = await this.postNotification(payload);
+            const status = notificationResponse['SOAP-ENV:Envelope']['SOAP-ENV:Header']['ns:HeaderReply']['ns:StatusMessages']['ns:StatusMessage'];
+            const statusData = await this.generateStatus(status);
+            if (statusData.code !== '0000') {
+                throw new BadRequestException(statusData.description);
             }
+            const currentpdate = new Date();
+            const otpDate = format(currentpdate, "dd/MM/yyyy");
+            const otpTime = format(currentpdate, "hh:mm a");
+            const Message = configCredentials.sucessSMS.replace('<account_name>', farmer.firstName)
+                .replace('<total>', this.formatMoney(payload.transactionalAmount))
+                .replace('<dealer_account_name>', user.username)
+                .replace('<Date>', otpDate + ' ' + otpTime)
+                .replace('<rtps_ref>', paymentID);
+            await this.sendSMSSoap({
+                message: Message,
+                phone: farmer.phoneNumber,
+            });
+
+            return {
+                processed: true,
+                message: statusData.description,
+                messageCode: statusData.code,
+                rtps_ref: paymentID,
+            };
+            // } else {
+            //     return {
+            //         processed: false,
+            //         message: cardStatusMessage,
+            //         messageCode: cardStatus,
+            //         rtps_ref: 0,
+            //     };
+            // }
 
         } catch (e) {
             throw new BadRequestException(e);
