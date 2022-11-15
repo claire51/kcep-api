@@ -7,7 +7,7 @@ RUN yum update -y && \
   yum install -y gcc-c++ && \
   yum install -y oracle-instantclient19.3-basic.x86_64 && \
   yum install -y procps && \
-  yum install -y java-11-openjdk-devel
+
 
 RUN  yum install -y nodejs && \
       yum update -y && \

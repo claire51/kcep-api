@@ -137,46 +137,46 @@ export class FarmerService {
                 reference: code,
             };
 
-            // const cardResponse = await this.processCardTransactions(cardTransac);
-            // const cardStatus = cardResponse['soapenv:Envelope']['soapenv:Header']['tns63:ReplyHeader']['head:StatusMessages']['head:MessageCode'];
-            // const cardStatusMessage = cardResponse['soapenv:Envelope']['soapenv:Header']['tns63:ReplyHeader']['head:StatusMessages']['head:MessageDescription'];
-            //
-            // if (cardStatus === 0) {
-            const otp = '' + await this.generateOtp(10);
-            const paymentID = otp;
-            const notificationResponse = await this.postNotification(payload);
-            const status = notificationResponse['SOAP-ENV:Envelope']['SOAP-ENV:Header']['ns:HeaderReply']['ns:StatusMessages']['ns:StatusMessage'];
-            const statusData = await this.generateStatus(status);
-            if (statusData.code !== '0000') {
-                throw new BadRequestException(statusData.description);
-            }
-            const currentpdate = new Date();
-            const otpDate = format(currentpdate, "dd/MM/yyyy");
-            const otpTime = format(currentpdate, "hh:mm a");
-            const Message = configCredentials.sucessSMS.replace('<account_name>', farmer.firstName)
-                .replace('<total>', this.formatMoney(payload.transactionalAmount))
-                .replace('<dealer_account_name>', user.username)
-                .replace('<Date>', otpDate + ' ' + otpTime)
-                .replace('<rtps_ref>', paymentID);
-            await this.sendSMSSoap({
-                message: Message,
-                phone: farmer.phoneNumber,
-            });
+            const cardResponse = await this.processCardTransactions(cardTransac);
+            const cardStatus = cardResponse['soapenv:Envelope']['soapenv:Header']['tns63:ReplyHeader']['head:StatusMessages']['head:MessageCode'];
+            const cardStatusMessage = cardResponse['soapenv:Envelope']['soapenv:Header']['tns63:ReplyHeader']['head:StatusMessages']['head:MessageDescription'];
 
-            return {
-                processed: true,
-                message: statusData.description,
-                messageCode: statusData.code,
-                rtps_ref: paymentID,
-            };
-            // } else {
-            //     return {
-            //         processed: false,
-            //         message: cardStatusMessage,
-            //         messageCode: cardStatus,
-            //         rtps_ref: 0,
-            //     };
-            // }
+            if (cardStatus === 0) {
+                const otp = '' + await this.generateOtp(10);
+                const paymentID = otp;
+                const notificationResponse = await this.postNotification(payload);
+                const status = notificationResponse['SOAP-ENV:Envelope']['SOAP-ENV:Header']['ns:HeaderReply']['ns:StatusMessages']['ns:StatusMessage'];
+                const statusData = await this.generateStatus(status);
+                if (statusData.code !== '0000') {
+                    throw new BadRequestException(statusData.description);
+                }
+                const currentpdate = new Date();
+                const otpDate = format(currentpdate, "dd/MM/yyyy");
+                const otpTime = format(currentpdate, "hh:mm a");
+                const Message = configCredentials.sucessSMS.replace('<account_name>', farmer.firstName)
+                    .replace('<total>', this.formatMoney(payload.transactionalAmount))
+                    .replace('<dealer_account_name>', user.username)
+                    .replace('<Date>', otpDate + ' ' + otpTime)
+                    .replace('<rtps_ref>', paymentID);
+                await this.sendSMSSoap({
+                    message: Message,
+                    phone: farmer.phoneNumber,
+                });
+
+                return {
+                    processed: true,
+                    message: statusData.description,
+                    messageCode: statusData.code,
+                    rtps_ref: paymentID,
+                };
+            } else {
+                return {
+                    processed: false,
+                    message: cardStatusMessage,
+                    messageCode: cardStatus,
+                    rtps_ref: 0,
+                };
+            }
 
         } catch (e) {
             throw new BadRequestException(e);
@@ -201,10 +201,88 @@ export class FarmerService {
                 "AND STATUS1=0\n" +
                 "and substr (a.card_num,1,1)='6'\n" +
                 ") select * from asd where AID=:id ", [customerId, wallet]);
-            return cards;
+            if (cards.length > 0) {
+                const cardDetails = cards[0];
+                const cardBal = await this.getCardBalance(cardDetails.PAN);
+                const balanceData = await this.generateBalance(cardBal);
+                return {...cardDetails, Balance_on_Card: balanceData.AvailableAmount, ...balanceData};
+            } else {
+                return cards;
+            }
+
         } catch (e) {
             throw new BadRequestException(e);
         }
+    }
+
+    async generateBalance(data: any) {
+        const raPpayload = data['soapenv:Envelope']['soapenv:Body']['ns1237:GetCardSummaryResponse']['tns48:GetCardSummaryRespData']['tns51:GetCardSummaryResponseData']['tns51:CardSummary'];
+        return {
+            PanNo: raPpayload['tns51:PanNo'],
+            ProductType: raPpayload['tns51:ProductType'],
+            CardStatus: raPpayload['tns51:CardStatus'],
+            CardCurrency: raPpayload['tns51:CardCurrency'],
+            AvailableAmount: raPpayload['tns51:AvailableAmount'],
+        };
+
+    }
+
+    async getCardBalance(pan: string) {
+        return new Promise<any>((resolve, reject) => {
+            const auth = 'Basic ' + new Buffer(configCredentials.username + ":" + configCredentials.password).toString("base64");
+            const date = new Date();
+            // date.setHours(date.getHours() + 3);
+            const currenttime = format(date, "yyyy-MM-dd'T'HH:mm:ss");
+
+            const url = configCredentials.cardSummaryUrl;
+            const xml = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:mes=\"urn://co-opbank.co.ke/CommonServices/Data/Message/MessageHeader\" xmlns:com=\"urn://co-opbank.co.ke/CommonServices/Data/Common\" xmlns:get=\"urn://co-opbank.co.ke/TS/CMS/GetCardSummary.1.0\" xmlns:req=\"urn://co-opbank.co.ke/TS/CMS/GetCardSummary.1.0/Requests.1.0\">\n" +
+                "   <soapenv:Header>\n" +
+                "      <mes:RequestHeader>\n" +
+                `         <com:CreationTimestamp>${currenttime}</com:CreationTimestamp>\n` +
+                `         <com:CorrelationID>${this.uuid(16)}</com:CorrelationID>\n` +
+                `         <mes:MessageID>${this.uuid(16)}</mes:MessageID>\n` +
+                "         <mes:Credentials>\n" +
+                "            <mes:SystemCode>016</mes:SystemCode>\n" +
+                "            <mes:Username>admin</mes:Username>\n" +
+                "            <mes:Password>password</mes:Password>\n" +
+                "            <mes:Realm>realm</mes:Realm>\n" +
+                "         </mes:Credentials>\n" +
+                "      </mes:RequestHeader>\n" +
+                "   </soapenv:Header>\n" +
+                "   <soapenv:Body>\n" +
+                "      <get:GetCardSummaryRequest>\n" +
+                "         <get:GetCardSummaryReqData>\n" +
+                "            <!--1 or more repetitions:-->\n" +
+                "            <req:GenericField>\n" +
+                "               <req:FieldName>PAN_NUMBER</req:FieldName>\n" +
+                `               <req:FieldValue>${pan}</req:FieldValue>\n` +
+                "            </req:GenericField>\n" +
+                "         </get:GetCardSummaryReqData>\n" +
+                "      </get:GetCardSummaryRequest>\n" +
+                "   </soapenv:Body>\n" +
+                "</soapenv:Envelope>";
+
+            Request.post({
+                headers: {
+                    'Content-Type': 'text/xml',
+                    'Authorization': auth,
+                    'SOAPAction': '"GetCardSummary"',
+
+                },
+                url,
+                body: xml,
+            }, (error, response, body) => {
+                if (error) {
+                    const json = parser.toJson(body);
+                    reject(JSON.parse(json));
+                } else {
+                    const json = parser.toJson(body);
+                    Logger.log(JSON.parse(json));
+                    resolve(JSON.parse(json));
+                }
+
+            });
+        });
     }
 
     async processCardTransactions(data: any) {
@@ -232,19 +310,19 @@ export class FarmerService {
                 "         <language>en</language>\n" +
                 "         <switchingID/>\n" +
                 "         <billerRef>OMNIKCEP</billerRef>\n" +
-                "         <payinstrRef>KCEP</payinstrRef>\n" +
+                "         <payinstrRef>OMNIKCEP</payinstrRef>\n" +
                 "         <details>\n" +
                 "            <item>\n" +
-                `               <name>amount</name>\n` +
+                "               <name>amount</name>\n" +
                 `               <value>${data.transactionalAmount}</value>\n` +
+                "            </item>\n" +
+                "              <item>\n" +
+                "               <name>currency</name>\n" +
+                "               <value>KES</value>\n" +
                 "            </item>\n" +
                 "            <item>\n" +
                 "               <name>pan</name>\n" +
                 `               <value>${data.walletAccountNumber}</value>\n` +
-                "            </item>\n" +
-                "            <item>\n" +
-                "               <name>ACC2</name>\n" +
-                `               <value>${data.settlementAcc}</value>\n` +
                 "            </item>\n" +
                 "            <item>\n" +
                 "               <name>ccy_code</name>\n" +
@@ -252,7 +330,7 @@ export class FarmerService {
                 "            </item>\n" +
                 "            <item>\n" +
                 "               <name>point_code</name>\n" +
-                `               <value>090010199100</value>\n` +
+                "               <value>090010199100</value>\n" +
                 "            </item>\n" +
                 "            <item>\n" +
                 "               <name>ref_numb</name>\n" +
@@ -260,10 +338,10 @@ export class FarmerService {
                 "            </item>\n" +
                 "            <item>\n" +
                 "               <name>ROUT_ID2</name>\n" +
-                `               <value>40783</value>\n` +
+                "               <value>40783</value>\n" +
                 "            </item>\n" +
                 "            <item>\n" +
-                "               <name>terminal_merchant_id</name>\n" +
+                "               <name>merchant_id</name>\n" +
                 `               <value>${data.merchantCode}</value>\n` +
                 "            </item>\n" +
                 "            <item>\n" +
@@ -273,10 +351,6 @@ export class FarmerService {
                 "            <item>\n" +
                 "               <name>NARR</name>\n" +
                 `               <value>${data.Narration}</value>\n` +
-                "            </item>\n" +
-                "            <item>\n" +
-                "               <name>expiry</name>\n" +
-                `               <value>${data.expiry}</value>\n` +
                 "            </item>\n" +
                 "         </details>\n" +
                 "         <confirmed>\n" +

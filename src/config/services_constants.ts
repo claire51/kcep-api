@@ -8,6 +8,7 @@ export const configCredentials = {
     product_url: `${baseUrls.kcep_base_url}/BusinessDomains/000_COMMON/Services/CommonWallet/1.0/getValidation/ServiceStarter`,
     postTransactionUrl: `${baseUrls.kcep_base_url}/BusinessDomains/000_COMMON/Services/CommonWallet/1.0/postNotification/ServiceStarter`,
     cardTransactionUrl: `${baseUrls.kcep_base_url}/Card/CardTransaction/Post/1.0`,
+    cardSummaryUrl: `${baseUrls.kcep_base_url}/Cards/CardSummary/Get/1.0`,
     otpSMS: `Dear <account_name> your KCEP verification code is  <otp_code> for transaction at <Date>.\n`,
     sucessSMS: `Dear <account_name> your KCEP inputs purchase of Ksh <total> from  <dealer_account_name> on  <Date> has been processed. Reference No. <rtps_ref>`,
     username: "omni",
