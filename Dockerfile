@@ -19,7 +19,6 @@ RUN java -version
 RUN echo $JAVA_HOME
 WORKDIR /app
 COPY package*.json ./
-
 RUN npm ci
 
 COPY . .
