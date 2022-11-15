@@ -378,7 +378,6 @@ export class FarmerService {
                     reject(JSON.parse(json));
                 } else {
                     const json = parser.toJson(body);
-                    Logger.log(JSON.parse(json));
                     resolve(JSON.parse(json));
                 }
 
