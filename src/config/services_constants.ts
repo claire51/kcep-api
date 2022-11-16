@@ -1,5 +1,5 @@
 export const baseUrls = {
-    base_url: "http://172.16.204.171:28222",
+    base_url: "http://172.16.204.171:28222", // prod
     kcep_base_url: "http://192.168.0.180",
 };
 
