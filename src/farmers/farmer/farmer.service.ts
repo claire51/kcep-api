@@ -139,17 +139,18 @@ export class FarmerService {
 
             const cardResponse = await this.processCardTransactions(cardTransac);
             Logger.log(JSON.stringify(cardResponse), "cardResponse");
+
             const cardStatus = cardResponse['soapenv:Envelope']['soapenv:Header']['tns63:ReplyHeader']['head:StatusMessages']['head:MessageCode'];
             const cardStatusCode = cardResponse['soapenv:Envelope']['soapenv:Header']['tns63:ReplyHeader']['head:StatusCode'];
             const cardStatusMessage = cardResponse['soapenv:Envelope']['soapenv:Header']['tns63:ReplyHeader']['head:StatusMessages']['head:MessageDescription'];
 
             if (cardStatus === 0 || cardStatusCode === 'S_001') {
                 const cardpaymentID = cardResponse['soapenv:Envelope']['soapenv:Body']['tns63:DataOutput'];
+                const cardBalanceDetails = cardResponse['soapenv:Envelope']['soapenv:Body']['tns63:DataOutput'].details.item;
+                const result = cardBalanceDetails.filter(temp => temp.name === 'available_amount')[0];
+                const balance = result.value;
                 const paymentID = cardpaymentID.paymentID;
-                Logger.log(JSON.stringify(paymentID), "paymentID");
-
                 const notificationResponse = await this.postNotification(payload);
-                Logger.log(JSON.stringify(notificationResponse), "notificationResponse");
 
                 const status = notificationResponse['SOAP-ENV:Envelope']['SOAP-ENV:Header']['ns:HeaderReply']['ns:StatusMessages']['ns:StatusMessage'];
                 const statusData = await this.generateStatus(status);
@@ -174,6 +175,7 @@ export class FarmerService {
                         message: statusData.description,
                         messageCode: statusData.code,
                         rtps_ref: paymentID,
+                        balance_Before: balance,
                     };
                 }
             } else {
