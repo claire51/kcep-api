@@ -140,36 +140,42 @@ export class FarmerService {
             const cardResponse = await this.processCardTransactions(cardTransac);
             Logger.log(JSON.stringify(cardResponse), "cardResponse");
             const cardStatus = cardResponse['soapenv:Envelope']['soapenv:Header']['tns63:ReplyHeader']['head:StatusMessages']['head:MessageCode'];
+            const cardStatusCode = cardResponse['soapenv:Envelope']['soapenv:Header']['tns63:ReplyHeader']['head:StatusCode'];
             const cardStatusMessage = cardResponse['soapenv:Envelope']['soapenv:Header']['tns63:ReplyHeader']['head:StatusMessages']['head:MessageDescription'];
 
-            if (cardStatus === 0) {
+            if (cardStatus === 0 || cardStatusCode === 'S_001') {
                 const cardpaymentID = cardResponse['soapenv:Envelope']['soapenv:Body']['tns63:DataOutput'];
                 const paymentID = cardpaymentID.paymentID;
+                Logger.log(JSON.stringify(paymentID), "paymentID");
+
                 const notificationResponse = await this.postNotification(payload);
+                Logger.log(JSON.stringify(notificationResponse), "notificationResponse");
+
                 const status = notificationResponse['SOAP-ENV:Envelope']['SOAP-ENV:Header']['ns:HeaderReply']['ns:StatusMessages']['ns:StatusMessage'];
                 const statusData = await this.generateStatus(status);
                 if (statusData.code !== '0000') {
                     throw new BadRequestException(statusData.description);
-                }
-                const currentpdate = new Date();
-                const otpDate = format(currentpdate, "dd/MM/yyyy");
-                const otpTime = format(currentpdate, "hh:mm a");
-                const Message = configCredentials.sucessSMS.replace('<account_name>', farmer.firstName)
-                    .replace('<total>', this.formatMoney(payload.transactionalAmount))
-                    .replace('<dealer_account_name>', user.username)
-                    .replace('<Date>', otpDate + ' ' + otpTime)
-                    .replace('<rtps_ref>', paymentID);
-                await this.sendSMSSoap({
-                    message: Message,
-                    phone: farmer.phoneNumber,
-                });
+                } else {
+                    const currentpdate = new Date();
+                    const otpDate = format(currentpdate, "dd/MM/yyyy");
+                    const otpTime = format(currentpdate, "hh:mm a");
+                    const Message = configCredentials.sucessSMS.replace('<account_name>', farmer.firstName)
+                        .replace('<total>', this.formatMoney(payload.transactionalAmount))
+                        .replace('<dealer_account_name>', user.username)
+                        .replace('<Date>', otpDate + ' ' + otpTime)
+                        .replace('<rtps_ref>', paymentID);
+                    await this.sendSMSSoap({
+                        message: Message,
+                        phone: farmer.phoneNumber,
+                    });
 
-                return {
-                    processed: true,
-                    message: statusData.description,
-                    messageCode: statusData.code,
-                    rtps_ref: paymentID,
-                };
+                    return {
+                        processed: true,
+                        message: statusData.description,
+                        messageCode: statusData.code,
+                        rtps_ref: paymentID,
+                    };
+                }
             } else {
                 return {
                     processed: false,
