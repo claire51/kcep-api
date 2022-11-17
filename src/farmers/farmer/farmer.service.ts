@@ -138,12 +138,13 @@ export class FarmerService {
             };
 
             const cardResponse = await this.processCardTransactions(cardTransac);
+            Logger.log(JSON.stringify(cardResponse), "cardResponse");
             const cardStatus = cardResponse['soapenv:Envelope']['soapenv:Header']['tns63:ReplyHeader']['head:StatusMessages']['head:MessageCode'];
             const cardStatusMessage = cardResponse['soapenv:Envelope']['soapenv:Header']['tns63:ReplyHeader']['head:StatusMessages']['head:MessageDescription'];
 
             if (cardStatus === 0) {
-                const otp = '' + await this.generateOtp(10);
-                const paymentID = otp;
+                const cardpaymentID = cardResponse['soapenv:Envelope']['soapenv:Body']['tns63:DataOutput'];
+                const paymentID = cardpaymentID.paymentID;
                 const notificationResponse = await this.postNotification(payload);
                 const status = notificationResponse['SOAP-ENV:Envelope']['SOAP-ENV:Header']['ns:HeaderReply']['ns:StatusMessages']['ns:StatusMessage'];
                 const statusData = await this.generateStatus(status);
