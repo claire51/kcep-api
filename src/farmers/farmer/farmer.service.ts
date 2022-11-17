@@ -120,7 +120,7 @@ export class FarmerService {
                 throw new BadRequestException('Agrodealer with provided merchant code does not exist');
             }
 
-            const farmData = farmerDetails[0];
+            const farmData = farmerDetails;
             const code = 'KC' + this.randomString(8);
             const cardTransac = {
                 merchantCode: payload.merchantCode,
@@ -207,7 +207,7 @@ export class FarmerService {
                 const balanceData = await this.generateBalance(cardBal);
                 return {...cardDetails, Balance_on_Card: balanceData.AvailableAmount, ...balanceData};
             } else {
-                return cards;
+                return {};
             }
 
         } catch (e) {
@@ -277,7 +277,6 @@ export class FarmerService {
                     reject(JSON.parse(json));
                 } else {
                     const json = parser.toJson(body);
-                    Logger.log(JSON.parse(json));
                     resolve(JSON.parse(json));
                 }
 
@@ -291,7 +290,7 @@ export class FarmerService {
             const date = new Date();
             // date.setHours(date.getHours() + 3);
             const currenttime = format(date, "yyyy-MM-dd'T'HH:mm:ss");
-            const amount = parseFloat(data.transactionalAmount) * 100;
+
             const url = configCredentials.cardTransactionUrl;
             const xml = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:dat=\"urn://www.co-opbank.co.ke/CommonServices/TS/RTPS/SERVICES/CardTransaction/2.0/DataIO.1.0\" xmlns:com=\"urn://co-opbank.co.ke/CommonServices/Data/Common\" xmlns:mes=\"urn://co-opbank.co.ke/CommonServices/Data/Message/MessageHeader\">\n" +
                 "   <soapenv:Header>\n" +
@@ -314,7 +313,7 @@ export class FarmerService {
                 "         <details>\n" +
                 "            <item>\n" +
                 "               <name>amount</name>\n" +
-                `               <value>${amount}</value>\n` +
+                `               <value>${data.transactionalAmount}</value>\n` +
                 "            </item>\n" +
                 "              <item>\n" +
                 "               <name>currency</name>\n" +
