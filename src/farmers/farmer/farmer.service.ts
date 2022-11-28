@@ -225,13 +225,13 @@ export class FarmerService {
     }
 
     async generateBalance(data: any) {
-        const raPpayload = data['soapenv:Envelope']['soapenv:Body']['ns1237:GetCardSummaryResponse']['tns48:GetCardSummaryRespData']['tns51:GetCardSummaryResponseData']['tns51:CardSummary'];
+        const raPpayload = data['soapenv:Envelope']['soapenv:Body']['ns1237:GetCardSummaryResponse']['ns1237:GetCardSummaryRespData']['ns0:GetCardSummaryResponseData']['ns0:CardSummary'];
         return {
-            PanNo: raPpayload['tns51:PanNo'],
-            ProductType: raPpayload['tns51:ProductType'],
-            CardStatus: raPpayload['tns51:CardStatus'],
-            CardCurrency: raPpayload['tns51:CardCurrency'],
-            AvailableAmount: raPpayload['tns51:AvailableAmount'],
+            PanNo: raPpayload['ns0:PanNo'],
+            ProductType: raPpayload['ns0:ProductType'],
+            CardStatus: raPpayload['ns0:CardStatus'],
+            CardCurrency: raPpayload['ns0:CardCurrency'],
+            AvailableAmount: raPpayload['ns0:AvailableAmount'],
         };
 
     }
@@ -261,7 +261,6 @@ export class FarmerService {
                 "   <soapenv:Body>\n" +
                 "      <get:GetCardSummaryRequest>\n" +
                 "         <get:GetCardSummaryReqData>\n" +
-                "            <!--1 or more repetitions:-->\n" +
                 "            <req:GenericField>\n" +
                 "               <req:FieldName>PAN_NUMBER</req:FieldName>\n" +
                 `               <req:FieldValue>${pan}</req:FieldValue>\n` +
