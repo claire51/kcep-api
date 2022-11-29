@@ -321,7 +321,7 @@ export class FarmerService {
                 "         <details>\n" +
                 "            <item>\n" +
                 "               <name>amount</name>\n" +
-                `               <value>${data.transactionalAmount}</value>\n` +
+                `               <value>${parseFloat(data.transactionalAmount) * 100}</value>\n` +
                 "            </item>\n" +
                 "              <item>\n" +
                 "               <name>currency</name>\n" +
