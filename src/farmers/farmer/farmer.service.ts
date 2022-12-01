@@ -183,7 +183,7 @@ export class FarmerService {
             } else {
                 return {
                     processed: false,
-                    message: cardStatusMessage,
+                    message: cardStatusMessage.replace("Decline:", ''),
                     messageCode: cardStatus,
                     rtps_ref: 0,
                 };
