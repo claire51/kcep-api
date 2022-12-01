@@ -170,12 +170,14 @@ export class FarmerService {
                         phone: farmer.phoneNumber,
                     });
 
+                    const cardBal = await this.getCardBalance(farmData.PAN);
+                    const balanceData = await this.generateBalance(cardBal);
                     return {
                         processed: true,
                         message: statusData.description,
                         messageCode: statusData.code,
                         rtps_ref: paymentID,
-                        balance_Before: balance,
+                        balance: balanceData.AvailableAmount,
                     };
                 }
             } else {
