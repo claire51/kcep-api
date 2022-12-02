@@ -165,7 +165,7 @@ export class FarmerService {
                         .replace('<total>', this.formatMoney(payload.transactionalAmount))
                         .replace('<dealer_account_name>', user.username)
                         .replace('<Date>', otpDate + ' ' + otpTime)
-                        .replace('<wallet>', farmData.APP_NAME ? farmData.APP_NAME.toLowerCase : ' ')
+                        .replace('<wallet>', farmData.APP_NAME ? farmData.APP_NAME : ' ')
                         .replace('<balace>', balanceData.AvailableAmount)
                         .replace('<rtps_ref>', paymentID);
                     await this.sendSMSSoap({
