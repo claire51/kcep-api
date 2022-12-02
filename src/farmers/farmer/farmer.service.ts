@@ -146,9 +146,6 @@ export class FarmerService {
 
             if (cardStatus === 0 || cardStatusCode === 'S_001') {
                 const cardpaymentID = cardResponse['soapenv:Envelope']['soapenv:Body']['tns63:DataOutput'];
-                const cardBalanceDetails = cardResponse['soapenv:Envelope']['soapenv:Body']['tns63:DataOutput'].details.item;
-                const result = cardBalanceDetails.filter(temp => temp.name === 'available_amount')[0];
-                const balance = result.value;
                 const paymentID = cardpaymentID.paymentID;
                 const notificationResponse = await this.postNotification(payload);
 
@@ -160,18 +157,22 @@ export class FarmerService {
                     const currentpdate = new Date();
                     const otpDate = format(currentpdate, "dd/MM/yyyy");
                     const otpTime = format(currentpdate, "hh:mm a");
+
+                    const cardBal = await this.getCardBalance(farmData.PAN);
+                    const balanceData = await this.generateBalance(cardBal);
+
                     const Message = configCredentials.sucessSMS.replace('<account_name>', farmer.firstName)
                         .replace('<total>', this.formatMoney(payload.transactionalAmount))
                         .replace('<dealer_account_name>', user.username)
                         .replace('<Date>', otpDate + ' ' + otpTime)
+                        .replace('<wallet>', farmData.APP_NAME ? farmData.APP_NAME.toLowerCase : ' ')
+                        .replace('<balace>', balanceData.AvailableAmount)
                         .replace('<rtps_ref>', paymentID);
                     await this.sendSMSSoap({
                         message: Message,
                         phone: farmer.phoneNumber,
                     });
 
-                    const cardBal = await this.getCardBalance(farmData.PAN);
-                    const balanceData = await this.generateBalance(cardBal);
                     return {
                         processed: true,
                         message: statusData.description,
