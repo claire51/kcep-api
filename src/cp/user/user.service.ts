@@ -121,14 +121,21 @@ export class UserService {
     }
 
     async sendOtpByPhoneNumber({mobileNumber, type}: phoneOtpDTO): Promise<any> {
-        const user: User = await this.userRepository
-            .createQueryBuilder("user")
-            .where("user.PhoneNumber like :phone", {phone: `%${mobileNumber.substr(mobileNumber.length - 9)}%`})
-            .getOne();
+        let user: User;
 
-
+        if (type === 1) {  // forgot username
+            user = await this.userRepository
+                .createQueryBuilder("user")
+                .where("user.PhoneNumber like :phone", {phone: `%${mobileNumber.slice(-9)}%`})
+                .getOne();
+        } else if (type === 2) {  // forgot password
+            user = await this.userRepository
+                .createQueryBuilder("user")
+                .where("user.username = :username", {username: mobileNumber})
+                .getOne();
+        }
         if (!user) {
-            throw new BadRequestException('Agrodealer with provided mobile number does not exist');
+            throw new BadRequestException('Agrodealer with provided mobile number/Username does not exist');
         }
         try {
             if (type === 1) {
