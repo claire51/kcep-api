@@ -36,10 +36,10 @@ export class UserService {
     }
 
     async login({username, password}: LoginUserDTO): Promise<User> {
+        const user = await this.userRepository.createQueryBuilder()
+            .where("LOWER(username) = LOWER(:username)", {username})
+            .getOne();
 
-        const user = await this.userRepository.findOne({
-            where: {username},
-        });
         try {
             if (!user) {
                 throw new BadRequestException('Agrodealer does not exist');
@@ -63,10 +63,10 @@ export class UserService {
     }
 
     async validateUser({username}: validateUserDTO, ip): Promise<any> {
+        const user: User = await this.userRepository.createQueryBuilder()
+            .where("LOWER(username) = LOWER(:username)", {username})
+            .getOne();
 
-        const user: User = await this.userRepository.findOne({
-            where: {username},
-        });
         if (!user) {
             throw new BadRequestException('Agrodealer does not exist');
         }
@@ -87,9 +87,9 @@ export class UserService {
     }
 
     async sendOtp({username}: otpDTO): Promise<any> {
-        const user: User = await this.userRepository.findOne({
-            where: {username},
-        });
+        const user: User = await this.userRepository.createQueryBuilder()
+            .where("LOWER(username) = LOWER(:username)", {username})
+            .getOne();
         if (!user) {
             throw new BadRequestException('Agrodealer does not exist');
         }
@@ -237,9 +237,14 @@ export class UserService {
     }
 
     async findByUsername(username: string): Promise<User> {
-        return await this.userRepository.findOne({
-            where: {username},
-        });
+        const user: User = await this.userRepository.createQueryBuilder()
+            .where("LOWER(username) = LOWER(:username)", {username})
+            .getOne();
+        if (!user) {
+            throw new BadRequestException('Agrodealer does not exist');
+        } else {
+            return user;
+        }
     }
 
     async findByMerchantCode(merchantCode: string): Promise<AgrodealerAccountsEntity> {
