@@ -15,6 +15,13 @@ export declare class FarmerController {
         message: any;
         messageCode: any;
         rtps_ref: any;
+        balance: any;
+    } | {
+        processed: boolean;
+        message: any;
+        messageCode: any;
+        rtps_ref: number;
+        balance?: undefined;
     }>;
     SendOtp(user: User, req: Request, payload: farmerOtpDTO): Promise<any>;
     findTransaction(user: User, filters: any): Promise<import("nestjs-typeorm-paginate").Pagination<import("../entity/transaction.entity").TransactionEntity>>;

@@ -26,8 +26,23 @@ export declare class FarmerService {
         message: any;
         messageCode: any;
         rtps_ref: any;
+        balance: any;
+    } | {
+        processed: boolean;
+        message: any;
+        messageCode: any;
+        rtps_ref: number;
+        balance?: undefined;
     }>;
     getFarmerCardNumber(customerId: string, wallet: string): Promise<any>;
+    generateBalance(data: any): Promise<{
+        PanNo: any;
+        ProductType: any;
+        CardStatus: any;
+        CardCurrency: any;
+        AvailableAmount: any;
+    }>;
+    getCardBalance(pan: string): Promise<any>;
     processCardTransactions(data: any): Promise<any>;
     findProducts(data: ProductDto): Promise<any>;
     postNotification(data: OrderDto): Promise<any>;

@@ -42,9 +42,9 @@ let UserService = class UserService {
     }
     login({ username, password }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield this.userRepository.findOne({
-                where: { username },
-            });
+            const user = yield this.userRepository.createQueryBuilder('user')
+                .where("LOWER(user.username) = LOWER(:username)", { username })
+                .getOne();
             try {
                 if (!user) {
                     throw new common_1.BadRequestException('Agrodealer does not exist');
@@ -69,9 +69,9 @@ let UserService = class UserService {
     }
     validateUser({ username }, ip) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield this.userRepository.findOne({
-                where: { username },
-            });
+            const user = yield this.userRepository.createQueryBuilder('user')
+                .where("LOWER(user.username) = LOWER(:username)", { username })
+                .getOne();
             if (!user) {
                 throw new common_1.BadRequestException('Agrodealer does not exist');
             }
@@ -95,9 +95,9 @@ let UserService = class UserService {
     }
     sendOtp({ username }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield this.userRepository.findOne({
-                where: { username },
-            });
+            const user = yield this.userRepository.createQueryBuilder('user')
+                .where("LOWER(user.username) = LOWER(:username)", { username })
+                .getOne();
             if (!user) {
                 throw new common_1.BadRequestException('Agrodealer does not exist');
             }
@@ -130,12 +130,21 @@ let UserService = class UserService {
     }
     sendOtpByPhoneNumber({ mobileNumber, type }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield this.userRepository
-                .createQueryBuilder("user")
-                .where("user.PhoneNumber like :phone", { phone: `%${mobileNumber.substr(mobileNumber.length - 9)}%` })
-                .getOne();
+            let user;
+            if (type === 1) {
+                user = yield this.userRepository
+                    .createQueryBuilder("user")
+                    .where("user.PhoneNumber like :phone", { phone: `%${mobileNumber.slice(-9)}%` })
+                    .getOne();
+            }
+            else if (type === 2) {
+                user = yield this.userRepository
+                    .createQueryBuilder("user")
+                    .where("user.username = :username", { username: mobileNumber })
+                    .getOne();
+            }
             if (!user) {
-                throw new common_1.BadRequestException('Agrodealer with provided mobile number does not exist');
+                throw new common_1.BadRequestException('Agrodealer with provided mobile number/Username does not exist');
             }
             try {
                 if (type === 1) {
@@ -239,9 +248,15 @@ let UserService = class UserService {
     }
     findByUsername(username) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.userRepository.findOne({
-                where: { username },
-            });
+            const user = yield this.userRepository.createQueryBuilder('user')
+                .where("LOWER(user.username) = LOWER(:username)", { username })
+                .getOne();
+            if (!user) {
+                throw new common_1.BadRequestException('Agrodealer does not exist');
+            }
+            else {
+                return user;
+            }
         });
     }
     findByMerchantCode(merchantCode) {
@@ -310,7 +325,7 @@ let UserService = class UserService {
     }
     sendSMSSoap(data) {
         return __awaiter(this, void 0, void 0, function* () {
-            const auth = 'Basic ' + new Buffer(services_constants_1.configCredentials.username + ":" + services_constants_1.configCredentials.password).toString("base64");
+            const auth = 'Basic ' + new Buffer(services_constants_1.configCredentials.username + ":" + services_constants_1.configCredentials.password_prod).toString("base64");
             const currenttime = date_fns_1.format(new Date(), "yyyy-MM-dd'T'HH:mm:ss");
             const uuid = this.uuid();
             const smsurl = services_constants_1.configCredentials.sms_url;

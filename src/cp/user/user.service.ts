@@ -36,8 +36,8 @@ export class UserService {
     }
 
     async login({username, password}: LoginUserDTO): Promise<User> {
-        const user = await this.userRepository.createQueryBuilder()
-            .where("LOWER(username) = LOWER(:username)", {username})
+        const user = await this.userRepository.createQueryBuilder('user')
+            .where("LOWER(user.username) = LOWER(:username)", {username})
             .getOne();
 
         try {
@@ -63,8 +63,8 @@ export class UserService {
     }
 
     async validateUser({username}: validateUserDTO, ip): Promise<any> {
-        const user: User = await this.userRepository.createQueryBuilder()
-            .where("LOWER(username) = LOWER(:username)", {username})
+        const user = await this.userRepository.createQueryBuilder('user')
+            .where("LOWER(user.username) = LOWER(:username)", {username})
             .getOne();
 
         if (!user) {
@@ -87,8 +87,8 @@ export class UserService {
     }
 
     async sendOtp({username}: otpDTO): Promise<any> {
-        const user: User = await this.userRepository.createQueryBuilder()
-            .where("LOWER(username) = LOWER(:username)", {username})
+        const user = await this.userRepository.createQueryBuilder('user')
+            .where("LOWER(user.username) = LOWER(:username)", {username})
             .getOne();
         if (!user) {
             throw new BadRequestException('Agrodealer does not exist');
@@ -237,8 +237,8 @@ export class UserService {
     }
 
     async findByUsername(username: string): Promise<User> {
-        const user: User = await this.userRepository.createQueryBuilder()
-            .where("LOWER(username) = LOWER(:username)", {username})
+        const user: User = await this.userRepository.createQueryBuilder('user')
+            .where("LOWER(user.username) = LOWER(:username)", {username})
             .getOne();
         if (!user) {
             throw new BadRequestException('Agrodealer does not exist');
