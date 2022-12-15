@@ -12,7 +12,7 @@ import {Otp} from "../../cp/enity/otp.entity";
 import {User} from "../../cp/enity/user.entity";
 import {AgrodealerAccountsEntity} from "../../cp/enity/agrodealer-accounts.entity";
 import {TransactionEntity} from "../entity/transaction.entity";
-import {IPaginationOptions, paginate, Pagination} from "nestjs-typeorm-paginate";
+import {IPaginationOptions, paginate} from "nestjs-typeorm-paginate";
 import {ILike} from "../../shared/case";
 
 const Request = require('request');
