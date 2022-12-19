@@ -1,7 +1,6 @@
 FROM oraclelinux:7-slim
 RUN yum install -y python3 make g++
-RUN yum update -y && \
-  yum install -y oracle-release-el7 && \
+RUN yum install -y oracle-release-el7 && \
   yum install -y oracle-nodejs-release-el7 && \
   curl -sL https://rpm.nodesource.com/setup_14.x | bash - && \
   yum install -y gcc-c++ && \
@@ -10,8 +9,6 @@ RUN yum update -y && \
   yum install -y java-11-openjdk-devel
 
 RUN  yum install -y nodejs && \
-      yum update -y && \
-      yum clean all && \
       node --version && \
       npm --version
 
