@@ -6,14 +6,11 @@ RUN yum install -y oracle-release-el7 && \
   yum install -y gcc-c++ && \
   yum install -y oracle-instantclient19.3-basic.x86_64 && \
   yum install -y procps && \
-  yum install -y java-11-openjdk-devel
 
 RUN  yum install -y nodejs && \
       node --version && \
       npm --version
 
-RUN java -version
-RUN echo $JAVA_HOME
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
