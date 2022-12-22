@@ -33,4 +33,4 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/kcep:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/kcep:latest
