@@ -1,3 +1,11 @@
+
+name: ci
+
+on:
+  push:
+    branches:
+      - "main"
+
 steps:
   - uses: actions/checkout@v1.0
     name: Check out code
