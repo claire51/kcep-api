@@ -147,7 +147,7 @@ export class FarmerService {
             if (cardStatus === 0 || cardStatusCode === 'S_001') {
                 const cardpaymentID = cardResponse['soapenv:Envelope']['soapenv:Body']['tns63:DataOutput'];
                 const paymentID = cardpaymentID.paymentID;
-                const notificationResponse = await this.postNotification(payload);
+                const notificationResponse = await this.postNotification(payload, paymentID);
 
                 const status = notificationResponse['SOAP-ENV:Envelope']['SOAP-ENV:Header']['ns:HeaderReply']['ns:StatusMessages']['ns:StatusMessage'];
                 const statusData = await this.generateStatus(status);
@@ -444,7 +444,7 @@ export class FarmerService {
         });
     }
 
-    async postNotification(data: OrderDto) {
+    async postNotification(data: OrderDto,paymentID) {
         return new Promise<any>(async (resolve, reject) => {
 
             const date = new Date();
@@ -452,7 +452,6 @@ export class FarmerService {
             const currenttime = format(date, "yyyy-MM-dd'T'HH:mm:ss'Z'");
             const auth = 'Basic ' + new Buffer(configCredentials.kcep_username + ":" + configCredentials.kcep_password).toString("base64");
             let productxmls = "";
-            const tranactionreference = await this.generateOtp(12);
             for (const product of data.products) {
                 const dataString = "<com:Product>\n" +
                     `<com:ProductServiceCode>${product.serviceCode}</com:ProductServiceCode>\n` +
@@ -482,7 +481,7 @@ export class FarmerService {
                 `<com:WalletAccountNumber>${data.walletAccountNumber}</com:WalletAccountNumber>\n` +
                 `<com:MerchantCode>${data.merchantCode}</com:MerchantCode>\n` +
                 `<com:TransactionAmountTotal>${data.transactionalAmount}</com:TransactionAmountTotal>\n` +
-                `<com:TransactionReferenceNumber>${tranactionreference}</com:TransactionReferenceNumber>\n` +
+                `<com:TransactionReferenceNumber>${paymentID}</com:TransactionReferenceNumber>\n` +
                 `<com:TransactionDate>${currenttime} </com:TransactionDate>\n` +
                 "</com:OperationParameters>\n" +
                 `${productxmls}` +
