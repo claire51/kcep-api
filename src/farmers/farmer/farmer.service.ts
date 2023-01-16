@@ -12,7 +12,7 @@ import {Otp} from "../../cp/enity/otp.entity";
 import {User} from "../../cp/enity/user.entity";
 import {AgrodealerAccountsEntity} from "../../cp/enity/agrodealer-accounts.entity";
 import {TransactionEntity} from "../entity/transaction.entity";
-import {IPaginationOptions, paginate} from "nestjs-typeorm-paginate";
+import {IPaginationOptions, paginate, Pagination} from "nestjs-typeorm-paginate";
 import {ILike} from "../../shared/case";
 
 const Request = require('request');
@@ -147,7 +147,7 @@ export class FarmerService {
             if (cardStatus === 0 || cardStatusCode === 'S_001') {
                 const cardpaymentID = cardResponse['soapenv:Envelope']['soapenv:Body']['tns63:DataOutput'];
                 const paymentID = cardpaymentID.paymentID;
-                const notificationResponse = await this.postNotification(payload, paymentID);
+                const notificationResponse = await this.postNotification(payload,paymentID);
 
                 const status = notificationResponse['SOAP-ENV:Envelope']['SOAP-ENV:Header']['ns:HeaderReply']['ns:StatusMessages']['ns:StatusMessage'];
                 const statusData = await this.generateStatus(status);
@@ -452,6 +452,7 @@ export class FarmerService {
             const currenttime = format(date, "yyyy-MM-dd'T'HH:mm:ss'Z'");
             const auth = 'Basic ' + new Buffer(configCredentials.kcep_username + ":" + configCredentials.kcep_password).toString("base64");
             let productxmls = "";
+            const tranactionreference = await this.generateOtp(12);
             for (const product of data.products) {
                 const dataString = "<com:Product>\n" +
                     `<com:ProductServiceCode>${product.serviceCode}</com:ProductServiceCode>\n` +
