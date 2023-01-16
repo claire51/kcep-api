@@ -2,10 +2,9 @@ FROM oraclelinux:7-slim
 RUN yum install -y python3 make g++
 RUN yum update -y && \
   yum install -y oracle-release-el7 && \
-  yum install -y oracle-nodejs-release-el7 && \
+  yum install -y oracle-instantclient19.10-basic && rm -rf /var/cache/yum && \
   curl -sL https://rpm.nodesource.com/setup_14.x | bash - && \
   yum install -y gcc-c++ && \
-  yum install -y oracle-instantclient19.10-basic && \
   yum install -y procps && \
   yum install -y java-11-openjdk-devel
 
