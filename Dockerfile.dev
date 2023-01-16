@@ -1,0 +1,25 @@
+
+FROM node:alpine as builder
+
+ENV NODE_ENV build
+
+COPY . .
+
+RUN npm ci \
+    && npm run build
+
+# ----------------------- ##
+
+FROM node:alpine
+
+ENV NODE_ENV production
+
+USER node
+WORKDIR /app
+
+
+COPY --chown=node --from=builder /app/package*.json .
+COPY --chown=node --from=builder /app/dist/ .
+
+
+CMD ["npm", "run" , "start:prod"]
