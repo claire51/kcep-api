@@ -1,5 +1,6 @@
 FROM oraclelinux:7-slim
 RUN yum install -y python3 make g++
+
 RUN yum update -y && \
     yum -y install oracle-release-el7 && \
     yum -y install oracle-instantclient19.10-basic && \
