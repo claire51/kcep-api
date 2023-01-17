@@ -39,7 +39,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            user/app:kceplatest
-            user/app:kceplatest.1.0.0
-            ghcr.io/user/app:kceplatest
-            ghcr.io/user/app:kceplatest.1.0.0
+            kevolmuish/kcep-api:latest
+            kevolmuish/kcep-api:1.0.0
+            ghcr.io/kevolmuish/kcep-api:latest
+            ghcr.io/kevolmuish/kcep-api:1.0.0
