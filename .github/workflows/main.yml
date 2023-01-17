@@ -39,7 +39,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            user/app:latest
-            user/app:1.0.0
-            ghcr.io/user/app:latest
-            ghcr.io/user/app:1.0.0
+            user/app:kceplatest
+            user/app:kceplatest.1.0.0
+            ghcr.io/user/app:kceplatest
+            ghcr.io/user/app:kceplatest.1.0.0
