@@ -42,7 +42,6 @@
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.15",
     "nestjs-typeorm-paginate": "^1.0.3",
-    "oracledb": "^5.5.0",
     "redis": "^3.0.2",
     "reflect-metadata": "^0.1.13",
     "request": "^2.88.0",
