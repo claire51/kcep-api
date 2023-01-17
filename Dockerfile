@@ -13,7 +13,7 @@ RUN  yum install -y nodejs && \
       yum update -y && \
       yum clean all && \
       node --version && \
-      npm install oracledb && \
+      npm install https://github.com/oracle/node-oracledb/releases/download/v5.5.0/oracledb-src-5.5.0.tgz && \
       npm --version && \
       echo Installed
 
