@@ -40,6 +40,6 @@ jobs:
           push: true
           tags: |
             user/app:latest
-            user/app:2.0.0
-            ghcr.io/user/app:sit
-            ghcr.io/user/app:2.0.0
+            user/app:1.0.0
+            ghcr.io/user/app:latest
+            ghcr.io/user/app:1.0.0
