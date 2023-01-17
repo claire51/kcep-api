@@ -10,10 +10,11 @@ RUN yum update -y && \
     yum install -y java-11-openjdk-devel \
 
 RUN  yum install -y nodejs && \
-      yum update -y && \
-      yum clean all && \
-      node --version && \
-      npm --version \
+     yum update -y && \
+     yum clean all && \
+     npm install https://github.com/oracle/node-oracledb/releases/download/v4.2.0/oracledb-src-4.2.0.tgz && \
+     node --version && \
+     npm --version \
 
 RUN java -version
 RUN echo $JAVA_HOME
