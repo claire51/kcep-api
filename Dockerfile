@@ -13,7 +13,9 @@ RUN  yum install -y nodejs && \
       yum update -y && \
       yum clean all && \
       node --version && \
-      npm --version
+      npm install oracledb && \
+      npm --version && \
+      echo Installed
 
 RUN java -version
 RUN echo $JAVA_HOME
